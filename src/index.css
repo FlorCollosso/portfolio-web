@@ -1,0 +1,319 @@
+@import '@fontsource-variable/libre-franklin';
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/fraunces/full-italic.css';
+@import '@fontsource-variable/caveat';
+@import 'tailwindcss';
+
+/* El modo noche se activa con data-theme="dark" en <html> (lo maneja la lámpara). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* Paleta heredada del portfolio original (hueso, rosa, celeste, gris oscuro),
+   ampliada con madera, ocre y la luz de la lámpara. Las variantes "deep"
+   cumplen contraste AA para texto en ambos modos. */
+@theme {
+  --font-sans: 'Libre Franklin Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-hand: 'Caveat Variable', 'Segoe Print', cursive;
+
+  --color-paper: #f7f6f5;
+  --color-wall: #efe9e1;
+  --color-card: #fffdfa;
+  --color-ink: #141414;
+  --color-ink-soft: #2c2c2c;
+  --color-muted: #55534f;
+  --color-line: #e2dcd4;
+
+  --color-teal: #80bdbb;
+  --color-teal-soft: #d7ebea;
+  --color-teal-deep: #24605e;
+
+  --color-rose: #d88da0;
+  --color-rose-soft: #f1d1d1;
+  --color-rose-deep: #93354f;
+
+  --color-ochre: #d6a24a;
+  --color-wood: #c49b74;
+  --color-wood-deep: #8f6948;
+  --color-fur: #34333a;
+  --color-glow: #ffd79a;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-swing: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Noche en el estudio: tinta azulada, papel cálido y la lámpara como única luz. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-paper: #14151b;
+  --color-wall: #1b1c25;
+  --color-card: #1f2029;
+  --color-ink: #f2eee8;
+  --color-ink-soft: #dcd6cd;
+  --color-muted: #aaa49b;
+  --color-line: #30313c;
+
+  --color-teal-soft: #1b3232;
+  --color-teal-deep: #93d3d0;
+
+  --color-rose-soft: #3a2430;
+  --color-rose-deep: #f2abbc;
+
+  --color-ochre: #c48f3a;
+  --color-wood: #6e5443;
+  --color-wood-deep: #4b382d;
+  --color-fur: #403f4a;
+}
+
+:root {
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    transition:
+      background-color 0.6s var(--ease-soft),
+      color 0.6s var(--ease-soft);
+  }
+
+  /* Grano de papel muy sutil sobre todo el sitio */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  :root[data-theme='dark'] body::after {
+    opacity: 0.07;
+  }
+
+  .font-serif {
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 50;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  ::selection {
+    @apply bg-rose-soft text-ink;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-rose-deep;
+  }
+
+  dialog::backdrop {
+    background: rgb(20 20 20 / 0.55);
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Transición de tema: la luz nueva se expande en círculo desde la lámpara. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* ——— Animaciones ——— */
+
+@keyframes scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes peek-in {
+  0% {
+    opacity: 0;
+    transform: translateY(35%);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes tail-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-7deg);
+  }
+}
+
+@keyframes tail-flick {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-18deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes ear-twitch {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-14deg);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.012, 1.02);
+  }
+}
+
+@keyframes zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(8px, -22px) scale(1.1);
+  }
+}
+
+@keyframes bubble {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.8);
+  }
+  15%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -4px) scale(0.96);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes mote {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--dx, 10px), 60px);
+    opacity: 0;
+  }
+}
+
+@keyframes cloud {
+  from {
+    transform: translateX(-30%);
+  }
+  to {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes cord-pull {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(9%);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(-70deg) rotate(-2deg) scale(0.9);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

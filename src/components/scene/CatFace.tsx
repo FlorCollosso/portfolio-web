@@ -40,9 +40,11 @@ export function CatFace({ className = '', follow = false }: CatFaceProps) {
       <path d="M6 30 L8 2 L28 18 Z M58 30 L56 2 L36 18 Z" fill="var(--color-fur)" />
       <path d="M11 24 L12 10 L23 19 Z M53 24 L52 10 L41 19 Z" fill="#d88da0" opacity="0.85" />
       <ellipse cx="32" cy="32" rx="28" ry="21" fill="var(--color-fur)" />
+      <path d="M26 12.5 Q27.5 18 29 20 M32 11.5 V19.5 M38 12.5 Q36.5 18 35 20" stroke="var(--color-fur-stripe)" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <ellipse cx="32" cy="42" rx="8.5" ry="5.5" className="fill-[#fbf1e3] dark:fill-[#e2d3bf]" opacity="0.9" />
       {[21, 43].map((cx) => (
         <g key={cx}>
-          <ellipse cx={cx} cy="31" rx="6" ry="6.4" className="fill-[#a9d9cf] dark:fill-[#c8f2df]" />
+          <ellipse cx={cx} cy="31" rx="6" ry="6.4" className="fill-[#f5c84a] dark:fill-[#ffd95e]" />
           <g data-pupil="">
             <ellipse cx={cx} cy="31" rx="2.2" ry="4.8" fill="#141414" />
             <circle cx={cx - 1.6} cy="28.8" r="1.2" fill="#fff" />

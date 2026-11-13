@@ -269,4 +269,30 @@ export const portfolioData: PortfolioData = {
     signature: 'Flor',
     postscript: 'P.D.: el gato todavía no tiene nombre. Se aceptan sugerencias por mail.',
   },
+
+  // Mis gatitas, en los cuadros del estante de abajo. Al tocar cada cuadro aparece su notita.
+  // Para usar fotos reales: guardalas en public/images/gatitas/ (micha-640.webp, micha-1280.webp)
+  // y descomentá la línea `photo`. Mientras tanto se ve un retrato ilustrado con estos colores.
+  pets: [
+    {
+      id: 'micha',
+      name: 'Micha',
+      note: 'Jefa de control de calidad: si no se sentó sobre el teclado, el diseño no está aprobado.',
+      // photo: { base: '/images/gatitas/micha', alt: 'Micha, mi gatita' },
+      fur: '#e9e1d4',
+      patch: '#6f6a66',
+      markings: 'patch',
+      eyes: '#9fd18a',
+    },
+    {
+      id: 'nami',
+      name: 'Nami',
+      note: 'Experta en siestas al sol y en ronronear justo cuando empieza una videollamada.',
+      // photo: { base: '/images/gatitas/nami', alt: 'Nami, mi gatita' },
+      fur: '#3a3940',
+      patch: '#f4efe6',
+      markings: 'tuxedo',
+      eyes: '#f2c94c',
+    },
+  ],
 }

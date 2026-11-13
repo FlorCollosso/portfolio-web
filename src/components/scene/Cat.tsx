@@ -6,16 +6,25 @@ interface CatProps {
   focusEl: HTMLElement | null
   /** La nota escondida: de vez en cuando la mira de reojo */
   noteEl: HTMLElement | null
+  /** La bolita de lana: cuando está cerca, el gato entra en modo juego */
+  playEl?: HTMLElement | null
+  playing?: boolean
+  /** Cambia cada vez que el gato tiene que darle un zarpazo a la lana */
+  batKey?: number
   style?: CSSProperties
   className?: string
 }
 
 const PHRASES = ['mrrp', 'prrr…', 'miau (o sea: hola)', '¿encontraste la nota?']
+const PLAY_PHRASES = ['¡mrrp!', '¡mía!', 'otra vez, otra vez', '¡te atrapé!']
+// Colores del gato atigrado: el pelaje sale de --color-fur
+const STRIPE = 'var(--color-fur-stripe)'
+const CREAM = 'fill-[#fbf1e3] dark:fill-[#e2d3bf]'
 const SLEEP_AFTER_MS = 22000
 
 // Gatito ilustrado en SVG. Sigue el cursor con la mirada, parpadea, mueve la cola
 // y las orejas, se duerme si nadie le presta atención y ronronea si lo tocás.
-export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
+export function Cat({ focusEl, noteEl, playEl = null, playing = false, batKey = 0, style, className = '' }: CatProps) {
   const reduced = useReducedMotion()
   const svgRef = useRef<SVGSVGElement>(null)
   const headRef = useRef<SVGGElement>(null)
@@ -23,6 +32,7 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
   const focusRef = useRef<HTMLElement | null>(null)
   const glanceRef = useRef<HTMLElement | null>(null)
   const noteRef = useRef<HTMLElement | null>(null)
+  const playRef = useRef<HTMLElement | null>(null)
   const sleepingRef = useRef(false)
   const frame = useRef(0)
   const petCount = useRef(0)
@@ -33,8 +43,9 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
   const [sleeping, setSleeping] = useState(false)
   const [happy, setHappy] = useState(false)
   const [bubble, setBubble] = useState<{ text: string; key: number } | null>(null)
+  const [batting, setBatting] = useState(false)
 
-  const alert = Boolean(focusEl)
+  const alert = Boolean(focusEl) || playing
 
   // Calcula hacia dónde mirar y mueve pupilas y cabeza (sin re-render, directo al DOM).
   const aim = useCallback(() => {
@@ -46,7 +57,7 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
       const r = svg.getBoundingClientRect()
       const ex = r.left + r.width * 0.5
       const ey = r.top + r.height * 0.38
-      const el = focusRef.current ?? glanceRef.current
+      const el = playRef.current ?? focusRef.current ?? glanceRef.current
       let tx = ex
       let ty = ey
       if (el) {
@@ -60,7 +71,7 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
       const dx = tx - ex
       const dy = ty - ey
       const dist = Math.hypot(dx, dy) || 1
-      const k = Math.min(1, dist / (r.width * 2))
+      const k = Math.min(1, dist / (r.width * (playRef.current ? 0.8 : 2)))
       const ox = (dx / dist) * 3.1 * k
       const oy = (dy / dist) * 2.6 * k
       svg.querySelectorAll<SVGGElement>('[data-pupil]').forEach((p) => p.setAttribute('transform', `translate(${ox.toFixed(2)} ${oy.toFixed(2)})`))
@@ -101,6 +112,32 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
       window.removeEventListener('scroll', onScroll)
     }
   }, [aim])
+
+  // Modo juego: sigue a la lana cuadro a cuadro (también mientras vuela sola)
+  useEffect(() => {
+    playRef.current = playing ? playEl : null
+    if (!playing) {
+      aim()
+      return
+    }
+    setSleeping(false)
+    let raf = 0
+    const loop = () => {
+      aim()
+      raf = requestAnimationFrame(loop)
+    }
+    loop()
+    return () => cancelAnimationFrame(raf)
+  }, [playing, playEl, aim])
+
+  // Zarpazo
+  useEffect(() => {
+    if (!batKey) return
+    setBatting(true)
+    setBubble({ text: PLAY_PHRASES[(batKey - 1) % PLAY_PHRASES.length], key: -batKey })
+    const t = window.setTimeout(() => setBatting(false), 560)
+    return () => window.clearTimeout(t)
+  }, [batKey])
 
   useEffect(() => {
     sleepingRef.current = sleeping
@@ -177,7 +214,9 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
 
   const tailAnimation = reduced
     ? 'none'
-    : flick
+    : playing
+      ? 'tail-play 0.6s ease-in-out infinite'
+      : flick
       ? 'tail-flick 0.75s var(--ease-soft)'
       : `tail-idle ${alert ? 1.3 : sleeping ? 6 : 3.6}s ease-in-out infinite`
 
@@ -190,7 +229,7 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
   const pupilStyle: CSSProperties = {
     transformBox: 'fill-box',
     transformOrigin: 'center',
-    transform: alert ? 'scale(1.35, 1.12)' : 'scale(1)',
+    transform: playing ? 'scale(1.75, 1.2)' : alert ? 'scale(1.35, 1.12)' : 'scale(1)',
     transition: 'transform 300ms var(--ease-soft)',
   }
 
@@ -222,32 +261,62 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
             d="M84 124 C 110 126, 122 104, 114 82 C 110 70, 100 68, 101 77 C 108 96, 104 112, 82 114 Z"
             fill="var(--color-fur)"
           />
-          <path d="M111 79 C 109 72, 103 70, 102 76 C 104 80, 108 82, 111 79 Z" className="fill-[#f3ede4] dark:fill-[#d9d2c7]" />
+          <path d="M106.5 112 L114.5 107 M111 99 L118 97 M110 88 L116.5 89" stroke={STRIPE} strokeWidth="3" strokeLinecap="round" />
+          <path d="M111 79 C 109 72, 103 70, 102 76 C 104 80, 108 82, 111 79 Z" className={CREAM} />
         </g>
 
-        {/* Cuerpo, con respiración muy suave */}
+        {/* Cuerpo, con respiración muy suave; en modo juego se inclina hacia la lana */}
+        <g
+          style={{
+            transformOrigin: '60px 130px',
+            transform: playing ? 'rotate(-5deg) translateX(-2px)' : 'none',
+            transition: 'transform 450ms var(--ease-swing)',
+          }}
+        >
         <g style={{ transformOrigin: '60px 130px', animation: reduced ? 'none' : `breathe ${sleeping ? 5 : 3.8}s ease-in-out infinite` }}>
           <path d="M28 130 C 18 100, 30 70, 60 66 C 90 70, 102 100, 92 130 Z" fill="var(--color-fur)" />
-          <path d="M47 130 C 45 108, 52 92, 60 90 C 68 92, 75 108, 73 130 Z" className="fill-[#f3ede4] dark:fill-[#d9d2c7]" />
-          <ellipse cx="48" cy="128" rx="9" ry="5" className="fill-[#f3ede4] dark:fill-[#d9d2c7]" />
-          <ellipse cx="72" cy="128" rx="9" ry="5" className="fill-[#f3ede4] dark:fill-[#d9d2c7]" />
-          <path d="M45 127 v3 M48 126.5 v3.5 M51 127 v3 M69 127 v3 M72 126.5 v3.5 M75 127 v3" stroke="#00000022" strokeWidth="0.8" />
+          {/* Rayitas de atigrado a los costados */}
+          <g stroke={STRIPE} strokeWidth="2.6" strokeLinecap="round" fill="none">
+            <path d="M27 100 Q32 102 34 107 M25.5 112 Q31 113 33 118" />
+            <path d="M93 100 Q88 102 86 107 M94.5 112 Q89 113 87 118" />
+          </g>
+          <path d="M47 130 C 45 108, 52 92, 60 90 C 68 92, 75 108, 73 130 Z" className={CREAM} />
+          {!batting && <ellipse cx="48" cy="128" rx="9" ry="5" className={CREAM} />}
+          <ellipse cx="72" cy="128" rx="9" ry="5" className={CREAM} />
+          <path d={`${batting ? '' : 'M45 127 v3 M48 126.5 v3.5 M51 127 v3 '}M69 127 v3 M72 126.5 v3.5 M75 127 v3`} stroke="#00000022" strokeWidth="0.8" />
+
+          {/* Patita que sale a darle un zarpazo a la lana */}
+          {batting && (
+            <g style={{ transformOrigin: '46px 106px', animation: reduced ? 'none' : 'paw-bat 0.55s var(--ease-soft)' }}>
+              <rect x="40" y="103" width="12" height="26" rx="6" fill="var(--color-fur)" />
+              <path d="M41 112 h10 M41 118 h10" stroke={STRIPE} strokeWidth="2" strokeLinecap="round" />
+              <ellipse cx="46" cy="128" rx="7.5" ry="5" className={CREAM} />
+              <path d="M43 126.5 v3 M46 126 v3.5 M49 126.5 v3" stroke="#00000022" strokeWidth="0.8" />
+            </g>
+          )}
 
           {/* Cabeza: gira levemente hacia donde mira */}
           <g ref={headRef} style={{ transformOrigin: '60px 72px', transition: 'transform 420ms var(--ease-soft)' }}>
-            <g style={{ transformOrigin: '42px 36px', animation: ear && !reduced ? 'ear-twitch 0.5s ease-in-out' : 'none' }}>
+            <g style={{ transformOrigin: '42px 36px', transform: playing ? 'rotate(-6deg)' : 'none', transition: 'transform 300ms', animation: ear && !reduced ? 'ear-twitch 0.5s ease-in-out' : 'none' }}>
               <path d="M33 40 L35 11 L56 28 Z" fill="var(--color-fur)" />
-              <path d="M37.5 34 L38.5 18 L50 28 Z" fill="#d88da0" opacity="0.85" />
+              <path d="M37.5 34 L38.5 18 L50 28 Z" fill="#e8a0ab" opacity="0.9" />
             </g>
             <g style={{ transformOrigin: '78px 36px', transform: alert ? 'rotate(4deg)' : 'none', transition: 'transform 300ms' }}>
               <path d="M87 40 L85 11 L64 28 Z" fill="var(--color-fur)" />
-              <path d="M82.5 34 L81.5 18 L70 28 Z" fill="#d88da0" opacity="0.85" />
+              <path d="M82.5 34 L81.5 18 L70 28 Z" fill="#e8a0ab" opacity="0.9" />
             </g>
             <ellipse cx="60" cy="50" rx="31" ry="26.5" fill="var(--color-fur)" />
-            <path d="M52 27 Q60 33 68 27" stroke="#00000030" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+            {/* La "M" de los atigrados en la frente y rayitas en las mejillas */}
+            <g stroke={STRIPE} strokeWidth="2.2" strokeLinecap="round" fill="none">
+              <path d="M53 26 Q55 33 57 36 M60 24.5 V35 M67 26 Q65 33 63 36" />
+              <path d="M30 47 Q34.5 48 37 51 M29.5 54 Q33.5 54.5 36 57" />
+              <path d="M90 47 Q85.5 48 83 51 M90.5 54 Q86.5 54.5 84 57" />
+            </g>
+            {/* Hocico claro */}
+            <ellipse cx="60" cy="63" rx="10.5" ry="7" className={CREAM} opacity="0.9" />
 
             {closedEyes ? (
-              <g stroke="#f3ede4" strokeWidth="2" strokeLinecap="round" fill="none">
+              <g stroke="#6b3a1c" strokeWidth="2" strokeLinecap="round" fill="none">
                 {happy ? (
                   <>
                     <path d="M41 53 Q47.5 45 54 53" />
@@ -262,32 +331,29 @@ export function Cat({ focusEl, noteEl, style, className = '' }: CatProps) {
               </g>
             ) : (
               <>
-                <g style={eyeStyle(47.5)}>
-                  <ellipse cx="47.5" cy="50" rx="7" ry="7.4" className="fill-[#a9d9cf] dark:fill-[#c8f2df]" />
-                  <g data-pupil="">
-                    <ellipse cx="47.5" cy="50" rx="2.5" ry="5.6" fill="#141414" style={pupilStyle} />
-                    <circle cx="45.6" cy="47.4" r="1.4" fill="#ffffff" />
+                {[47.5, 72.5].map((cx) => (
+                  <g key={cx} style={eyeStyle(cx)}>
+                    <ellipse cx={cx} cy="50" rx="7" ry="7.4" className="fill-[#f5c84a] dark:fill-[#ffd95e]" />
+                    <ellipse cx={cx} cy="50" rx="7" ry="7.4" fill="none" stroke="#9a5a22" strokeOpacity="0.35" strokeWidth="0.8" />
+                    <g data-pupil="">
+                      <ellipse cx={cx} cy="50" rx="2.5" ry="5.6" fill="#141414" style={pupilStyle} />
+                      <circle cx={cx - 1.9} cy="47.4" r="1.4" fill="#ffffff" />
+                    </g>
                   </g>
-                </g>
-                <g style={eyeStyle(72.5)}>
-                  <ellipse cx="72.5" cy="50" rx="7" ry="7.4" className="fill-[#a9d9cf] dark:fill-[#c8f2df]" />
-                  <g data-pupil="">
-                    <ellipse cx="72.5" cy="50" rx="2.5" ry="5.6" fill="#141414" style={pupilStyle} />
-                    <circle cx="70.6" cy="47.4" r="1.4" fill="#ffffff" />
-                  </g>
-                </g>
+                ))}
               </>
             )}
 
-            <circle cx="40" cy="61" r="4.5" fill="#d88da0" opacity={happy ? 0.55 : 0.22} style={{ transition: 'opacity 300ms' }} />
-            <circle cx="80" cy="61" r="4.5" fill="#d88da0" opacity={happy ? 0.55 : 0.22} style={{ transition: 'opacity 300ms' }} />
+            <circle cx="40" cy="61" r="4.5" fill="#e07f8f" opacity={happy ? 0.5 : 0.2} style={{ transition: 'opacity 300ms' }} />
+            <circle cx="80" cy="61" r="4.5" fill="#e07f8f" opacity={happy ? 0.5 : 0.2} style={{ transition: 'opacity 300ms' }} />
             <path d="M57 58.5 L63 58.5 L60 62 Z" fill="#e7a0b0" />
-            <path d="M60 62 Q57.5 66 54.5 64 M60 62 Q62.5 66 65.5 64" stroke="#f3ede4" strokeOpacity="0.7" strokeWidth="1.1" fill="none" strokeLinecap="round" />
-            <g stroke="#f3ede4" strokeOpacity="0.45" strokeWidth="0.8" strokeLinecap="round">
-              <path d="M43 60 L22 56 M43 63 L22 65" />
-              <path d="M77 60 L98 56 M77 63 L98 65" />
+            <path d="M60 62 Q57.5 66 54.5 64 M60 62 Q62.5 66 65.5 64" stroke="#8a4a24" strokeOpacity="0.6" strokeWidth="1.1" fill="none" strokeLinecap="round" />
+            <g stroke="#ffffff" strokeOpacity="0.7" strokeWidth="0.8" strokeLinecap="round">
+              <path d="M47 61 L22 56 M47 64 L22 65" />
+              <path d="M73 61 L98 56 M73 64 L98 65" />
             </g>
           </g>
+        </g>
         </g>
 
         {sleeping && !reduced && (

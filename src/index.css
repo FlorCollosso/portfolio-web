@@ -34,7 +34,8 @@
   --color-ochre: #d6a24a;
   --color-wood: #c49b74;
   --color-wood-deep: #8f6948;
-  --color-fur: #34333a;
+  --color-fur: #e8924a;
+  --color-fur-stripe: #c8682a;
   --color-glow: #ffd79a;
 
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
@@ -61,7 +62,8 @@
   --color-ochre: #c48f3a;
   --color-wood: #6e5443;
   --color-wood-deep: #4b382d;
-  --color-fur: #403f4a;
+  --color-fur: #cf7d3c;
+  --color-fur-stripe: #a95622;
 }
 
 :root {
@@ -130,6 +132,22 @@
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* Lámpara y su luz se balancean como una sola pieza: mismo ángulo, mismo punto
+   de apoyo en el techo. La escena marca qué está pasando con la lámpara. */
+.lamp-rig {
+  rotate: 0deg;
+  transition: rotate 0.7s var(--ease-swing);
+}
+
+.library-scene:has(.lamp-button:hover) .lamp-rig {
+  rotate: 2.5deg;
+}
+
+.library-scene:has(.lamp-button:active) .lamp-rig {
+  rotate: -1deg;
+  transition-duration: 0.25s;
 }
 
 /* ——— Animaciones ——— */
@@ -295,6 +313,101 @@
   from {
     opacity: 0;
     transform: perspective(800px) rotateX(-70deg) rotate(-2deg) scale(0.9);
+  }
+}
+
+@keyframes tail-play {
+  0%,
+  100% {
+    transform: rotate(4deg);
+  }
+  50% {
+    transform: rotate(-16deg);
+  }
+}
+
+@keyframes paw-bat {
+  0% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(128deg);
+  }
+  60% {
+    transform: rotate(112deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Notitas de las gatitas: se despegan del cuadro y vuelven a guardarse */
+@keyframes note-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(1.2rem) scale(0.55, 0.2);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes note-tuck {
+  to {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.6, 0.15);
+  }
+}
+
+/* Nota secreta: se dobla en tres, se achica y vuelve volando a su escondite */
+@keyframes note-fold {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) perspective(900px) rotateX(0deg) rotate(-1deg) scale(1, 1);
+  }
+  28% {
+    transform: translate(0, 0) perspective(900px) rotateX(58deg) rotate(-1deg) scale(1, 0.66);
+  }
+  48% {
+    opacity: 1;
+    transform: translate(0, -0.5rem) perspective(900px) rotateX(0deg) rotate(-4deg) scale(0.46, 0.2);
+  }
+  100% {
+    opacity: 0.35;
+    transform: translate(var(--to-x, 0), var(--to-y, 0)) perspective(900px) rotateX(0deg) rotate(12deg) scale(0.04, 0.03);
+  }
+}
+
+@keyframes crease {
+  0% {
+    opacity: 0;
+  }
+  22%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* El papelito entre los libros recibe la nota de vuelta */
+@keyframes note-home {
+  0% {
+    transform: translateY(-30%) rotate(-10deg) scale(1.15);
+  }
+  60% {
+    transform: translateY(6%) rotate(3deg);
+  }
+}
+
+dialog[data-folding]::backdrop {
+  animation: backdrop-out 1.1s ease-in forwards;
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
   }
 }
 

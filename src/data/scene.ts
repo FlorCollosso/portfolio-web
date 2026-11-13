@@ -47,9 +47,29 @@ export interface FrameSlot {
 export const frames: FrameSlot[] = [
   { projectId: 'magic-bloom', x: 178, y: 58, w: 156, h: 124, tilt: -1.5, variant: 'wall' },
   { projectId: 'ocha', x: 350, y: 80, w: 64, h: 82, tilt: 2, variant: 'wall' },
-  { projectId: 'fpfix', x: 132, y: 488, w: 84, h: 98, tilt: -3, variant: 'stand' },
-  { projectId: 'crafting', x: 232, y: 520, w: 98, h: 66, tilt: -6, variant: 'postcard' },
 ]
+
+/** Cuadritos de las gatitas en la repisa de abajo (el id coincide con `pets` en portfolioData) */
+export interface PetSlot {
+  petId: string
+  x: number
+  y: number
+  w: number
+  h: number
+  tilt: number
+  variant: 'stand' | 'polaroid'
+}
+
+export const petFrames: PetSlot[] = [
+  { petId: 'micha', x: 128, y: 494, w: 78, h: 92, tilt: -3, variant: 'stand' },
+  { petId: 'nami', x: 218, y: 508, w: 70, h: 80, tilt: 5, variant: 'polaroid' },
+]
+
+/** Bolita de lana: su lugar de descanso en la repisa de abajo */
+export const yarnHome = { x: 298, y: 554, size: 32 }
+
+/** Zona del gato (centro de la cabeza) para saber cuándo la lana está cerca */
+export const catPlayZone = { x: 482, y: 236, radius: 110 }
 
 /** Convierte unidades de la escena en porcentajes para posicionar con CSS */
 export function box(x: number, y: number, w: number, h: number) {

@@ -83,6 +83,26 @@ export interface SecretNote {
   postscript?: string
 }
 
+/** Cuadritos de las gatitas en el estante de abajo del inicio */
+export interface PetPortrait {
+  id: string
+  name: string
+  /** Frase corta de la notita que aparece al tocar el cuadro */
+  note: string
+  /**
+   * Foto real (opcional). Ruta base sin sufijo, igual que los proyectos:
+   * "/images/gatitas/micha" → micha-640.webp. Si no hay foto, se muestra un retrato ilustrado.
+   */
+  photo?: ResponsiveImage
+  /** Colores del retrato ilustrado (mientras no haya foto) */
+  fur: string
+  /** Color de las manchas o rayitas del pelaje */
+  patch?: string
+  /** Dibujo del pelaje: una mancha sobre un ojo, o "smoking" (hocico y pechito claros) */
+  markings?: 'patch' | 'tuxedo'
+  eyes: string
+}
+
 export interface PortfolioData {
   profile: Profile
   projects: Project[]
@@ -91,4 +111,5 @@ export interface PortfolioData {
   skills: SkillGroup[]
   languages: string[]
   secretNote: SecretNote
+  pets: PetPortrait[]
 }

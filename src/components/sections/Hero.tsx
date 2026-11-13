@@ -1,5 +1,5 @@
 import { FiArrowDown, FiDownload, FiMapPin } from 'react-icons/fi'
-import type { Profile, Project, SecretNote } from '../../types/portfolio'
+import type { PetPortrait, Profile, Project, SecretNote } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
 import { LibraryScene } from '../scene/LibraryScene'
 import { ButtonLink } from '../ui/ButtonLink'
@@ -9,13 +9,14 @@ interface HeroProps {
   profile: Profile
   projects: Project[]
   note: SecretNote
+  pets: PetPortrait[]
   onOpenProject: (project: Project) => void
 }
 
 // Entrada escalonada del texto del inicio
 const enter = (delay: string) => ({ animation: `scene-in 1s var(--ease-soft) ${delay} backwards` })
 
-export function Hero({ profile, projects, note, onOpenProject }: HeroProps) {
+export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps) {
   const firstName = profile.name.split(' ')[0]
   const [roleA, roleB] = profile.role.split(' y ')
 
@@ -70,12 +71,12 @@ export function Hero({ profile, projects, note, onOpenProject }: HeroProps) {
         </div>
 
         <figure className="mx-auto w-full max-w-xl lg:mr-0 lg:max-w-[min(100%,calc((100svh-9rem)*0.909))]">
-          <LibraryScene projects={projects} profile={profile} note={note} onOpenProject={onOpenProject} />
+          <LibraryScene projects={projects} profile={profile} note={note} pets={pets} onOpenProject={onOpenProject} />
           <figcaption className="mt-4 flex items-start gap-2 px-2 text-sm text-muted">
             <span aria-hidden="true" className="mt-1.5 inline-block size-2 shrink-0 rotate-45 bg-rose" />
             <span>
-              Cada libro con título, cada cuadro y la postal son proyectos: tocalos para abrirlos. La lámpara cambia la luz del
-              sitio. <span className="font-hand text-lg text-rose-deep">Y hay algo escondido.</span>
+              Cada libro con título y cada cuadro de la pared son proyectos: tocalos para abrirlos. Abajo están Micha y Nami, mis
+              gatitas. La lámpara cambia la luz del sitio y la lana es para el gato. <span className="font-hand text-lg text-rose-deep">Y hay algo escondido.</span>
             </span>
           </figcaption>
         </figure>

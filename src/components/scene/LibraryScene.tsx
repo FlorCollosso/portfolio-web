@@ -1,18 +1,21 @@
-import { useCallback, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
-import { books, box, frames, lyingBooks, SCENE } from '../../data/scene'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { books, box, frames, lyingBooks, petFrames, SCENE } from '../../data/scene'
 import { useFinePointer, useReducedMotion } from '../../hooks/useMediaQuery'
-import type { Profile, Project, SecretNote as SecretNoteData } from '../../types/portfolio'
+import type { PetPortrait, Profile, Project, SecretNote as SecretNoteData } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
 import { Cat } from './Cat'
 import { LampHint, Mug, Plant, SceneWindow, Vase } from './Decor'
 import { Lamp } from './Lamp'
+import { PetFrame } from './PetFrame'
 import { Book, Frame, SceneLabel, type AttentionHandlers } from './ProjectObjects'
 import { SecretNote } from './SecretNote'
+import { Yarn } from './Yarn'
 
 interface LibrarySceneProps {
   projects: Project[]
   profile: Profile
   note: SecretNoteData
+  pets: PetPortrait[]
   onOpenProject: (project: Project) => void
 }
 
@@ -26,6 +29,8 @@ const readHintUsed = () => {
 }
 
 const { shelfTop, shelfBottom } = SCENE
+// Donde cuelga la lámpara del techo (x = 440 + 48 de la escena): eje del balanceo de lámpara y luz
+const LAMP_PIVOT = `${((440 + 48) / SCENE.width) * 100}% 0%`
 
 // Capa con parallax: se desplaza apenas según la posición del mouse (variables --px / --py).
 const layer = (depth: number): CSSProperties => ({
@@ -33,11 +38,15 @@ const layer = (depth: number): CSSProperties => ({
 })
 
 // El estudio: pared, ventana, repisas, libros-proyecto, cuadros, el gato y la lámpara.
-export function LibraryScene({ projects, profile, note, onOpenProject }: LibrarySceneProps) {
+export function LibraryScene({ projects, profile, note, pets, onOpenProject }: LibrarySceneProps) {
   const sceneRef = useRef<HTMLDivElement>(null)
   const [noteEl, setNoteEl] = useState<HTMLButtonElement | null>(null)
   const [focusEl, setFocusEl] = useState<HTMLElement | null>(null)
   const [hintUsed, setHintUsed] = useState(readHintUsed)
+  const [openPet, setOpenPet] = useState<string | null>(null)
+  const [yarnEl, setYarnEl] = useState<HTMLButtonElement | null>(null)
+  const [catPlaying, setCatPlaying] = useState(false)
+  const [batKey, setBatKey] = useState(0)
   const fine = useFinePointer()
   const reduced = useReducedMotion()
 
@@ -49,6 +58,21 @@ export function LibraryScene({ projects, profile, note, onOpenProject }: Library
     onFocus: (e) => setFocusEl(e.currentTarget),
     onBlur: () => setFocusEl(null),
   }
+
+  // La notita de una gatita se guarda al tocar afuera o con Escape
+  useEffect(() => {
+    if (!openPet) return
+    const onDown = (e: globalThis.PointerEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest('[data-pet-frame]')) setOpenPet(null)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpenPet(null)
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [openPet])
 
   const onPointerMove = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
@@ -78,10 +102,10 @@ export function LibraryScene({ projects, profile, note, onOpenProject }: Library
     <div
       ref={sceneRef}
       role="group"
-      aria-label="Mi estudio: cada libro, cuadro y objeto con etiqueta es un proyecto"
+      aria-label="Mi estudio: cada libro con título y cada cuadro de la pared es un proyecto"
       onPointerMove={onPointerMove}
       onPointerLeave={resetParallax}
-      className="relative aspect-[600/660] w-full overflow-hidden bg-wall [container-type:inline-size] [border-radius:50%_50%_1.6rem_1.6rem/18%_18%_1.6rem_1.6rem] shadow-[inset_0_0_0_1px_var(--color-line),0_2.5rem_4rem_-2.5rem_rgb(20_20_20/0.35)] transition-colors duration-700"
+      className="library-scene relative aspect-[600/660] w-full overflow-hidden bg-wall [container-type:inline-size] [border-radius:50%_50%_1.6rem_1.6rem/18%_18%_1.6rem_1.6rem] shadow-[inset_0_0_0_1px_var(--color-line),0_2.5rem_4rem_-2.5rem_rgb(20_20_20/0.35)] transition-colors duration-700"
     >
       {/* Textura de pared: rayas finísimas y una sombra en el piso */}
       <div
@@ -90,38 +114,45 @@ export function LibraryScene({ projects, profile, note, onOpenProject }: Library
       />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[16%] bg-linear-to-t from-ink/8 to-transparent" />
 
-      {/* Luz de la lámpara sobre la pared: solo de noche */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-0 transition-opacity duration-1000 dark:opacity-100"
-        style={{
-          background:
-            'radial-gradient(ellipse 46% 40% at 81% 30%, rgb(255 215 154 / 0.34), rgb(255 215 154 / 0.1) 55%, transparent 75%)',
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-0 mix-blend-screen transition-opacity duration-1000 dark:opacity-100"
-        style={{
-          background: 'linear-gradient(to bottom, rgb(255 222 166 / 0.28), rgb(255 222 166 / 0.02))',
-          clipPath: 'polygon(74.5% 21.8%, 87.5% 21.8%, 100% 58%, 62% 58%)',
-        }}
-      >
-        {!reduced &&
-          [0, 1, 2, 3, 4].map((i) => (
-            <span
-              key={i}
-              className="absolute size-[0.6cqw] rounded-full bg-[#fff1cf]"
-              style={
-                {
-                  left: `${72 + i * 4}%`,
-                  top: `${26 + (i % 3) * 7}%`,
-                  '--dx': `${i % 2 ? -12 : 10}px`,
-                  animation: `mote ${5 + i}s linear ${i * 1.1}s infinite`,
-                } as CSSProperties
-              }
-            />
-          ))}
+      {/* Luz de la lámpara (solo de noche). Comparte el parallax de la lámpara y su balanceo
+          (.lamp-rig, con el mismo punto de apoyo en el techo), así la luz sale siempre de ella. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 transition-transform duration-700 ease-out" style={layer(9)}>
+        <div className="lamp-rig absolute inset-0" style={{ transformOrigin: LAMP_PIVOT }}>
+          <div
+            className="absolute inset-0 opacity-0 transition-opacity duration-1000 dark:opacity-100"
+            style={{
+              background:
+                'radial-gradient(ellipse 46% 40% at 81% 30%, rgb(255 215 154 / 0.34), rgb(255 215 154 / 0.1) 55%, transparent 75%)',
+            }}
+          />
+        </div>
+      </div>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 mix-blend-screen transition-transform duration-700 ease-out" style={layer(9)}>
+        <div className="lamp-rig absolute inset-0" style={{ transformOrigin: LAMP_PIVOT }}>
+          <div
+            className="absolute inset-0 opacity-0 transition-opacity duration-1000 dark:opacity-100"
+            style={{
+              background: 'linear-gradient(to bottom, rgb(255 222 166 / 0.28), rgb(255 222 166 / 0.02))',
+              clipPath: 'polygon(74.5% 21.8%, 87.5% 21.8%, 100% 58%, 62% 58%)',
+            }}
+          >
+            {!reduced &&
+              [0, 1, 2, 3, 4].map((i) => (
+                <span
+                  key={i}
+                  className="absolute size-[0.6cqw] rounded-full bg-[#fff1cf]"
+                  style={
+                    {
+                      left: `${72 + i * 4}%`,
+                      top: `${26 + (i % 3) * 7}%`,
+                      '--dx': `${i % 2 ? -12 : 10}px`,
+                      animation: `mote ${5 + i}s linear ${i * 1.1}s infinite`,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+          </div>
+        </div>
       </div>
 
       {/* Capa del fondo: ventana */}
@@ -151,11 +182,30 @@ export function LibraryScene({ projects, profile, note, onOpenProject }: Library
         <Cat
           focusEl={focusEl}
           noteEl={noteEl}
+          playEl={yarnEl}
+          playing={catPlaying}
+          batKey={batKey}
           style={box(426, shelfTop - lyingBooks[0].h - lyingBooks[1].h - 130, 118, 130)}
           className="z-10 [animation:peek-in_1.1s_var(--ease-soft)_1.1s_backwards]"
         />
 
-        {/* Repisa de abajo */}
+        {/* Repisa de abajo: mis gatitas, la lana, la taza y el CV */}
+        {petFrames.map((slot, i) => {
+          const pet = pets.find((p) => p.id === slot.petId)
+          return (
+            pet && (
+              <PetFrame
+                key={slot.petId}
+                slot={slot}
+                pet={pet}
+                order={i}
+                open={openPet === pet.id}
+                onToggle={(id) => setOpenPet((cur) => (cur === id ? null : id))}
+                {...attention}
+              />
+            )
+          )
+        })}
         <Mug style={box(344, shelfBottom - 82, 46, 82)} />
         <a
           href={asset(profile.cvUrl)}
@@ -172,6 +222,7 @@ export function LibraryScene({ projects, profile, note, onOpenProject }: Library
           <SceneLabel title="Mi CV" detail="Descargar en PDF" />
         </a>
         <Shelf y={shelfBottom} />
+        <Yarn ref={setYarnEl} sceneRef={sceneRef} reduced={reduced} onNear={setCatPlaying} onBat={() => setBatKey((k) => k + 1)} />
       </div>
 
       {/* Capa delantera: la planta, que tapa un poco el borde */}
@@ -182,7 +233,7 @@ export function LibraryScene({ projects, profile, note, onOpenProject }: Library
       {/* Viñeta muy sutil para dar profundidad */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 shadow-[inset_0_0_6cqw_rgb(0_0_0/0.08)] dark:shadow-[inset_0_0_10cqw_rgb(0_0_0/0.45)]" />
 
-      <div className="pointer-events-none absolute inset-0" style={layer(9)}>
+      <div className="pointer-events-none absolute inset-0 transition-transform duration-700 ease-out" style={layer(9)}>
         <Lamp style={box(440, 0, 96, 172)} onUse={markLampUsed} />
       </div>
     </div>

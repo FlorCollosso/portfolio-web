@@ -1,5 +1,6 @@
-import { useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { box, type PetSlot } from '../../data/scene'
+import { useReducedMotion } from '../../hooks/useMediaQuery'
 import type { PetPortrait } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
 import type { AttentionHandlers } from './ProjectObjects'
@@ -8,152 +9,183 @@ interface PetFrameProps extends AttentionHandlers {
   slot: PetSlot
   pet: PetPortrait
   order: number
-  open: boolean
-  onToggle: (id: string) => void
 }
 
-const BACKDROPS = ['#f1d1d1', '#d7ebea']
+// Marcos con los tonos de la paleta (rose / teal)
+const FRAME_COLOR = {
+  rose: 'bg-rose shadow-[inset_0_0_0_1px_rgb(0_0_0/0.08),inset_0.25em_0.25em_0_rgb(255_255_255/0.22)]',
+  teal: 'bg-teal shadow-[inset_0_0_0_1px_rgb(0_0_0/0.08),inset_0.25em_0.25em_0_rgb(255_255_255/0.22)]',
+}
 
-// Cuadrito de una de mis gatitas. Al tocarlo se despega una notita con una frase sobre ella.
-export function PetFrame({ slot, pet, order, open, onToggle, ...handlers }: PetFrameProps) {
-  // Mantiene la nota montada mientras se guarda (animación de salida)
-  const [shown, setShown] = useState(open)
-  if (open && !shown) setShown(true)
-  const noteId = `nota-${pet.id}`
+type Phase = 'closed' | 'open' | 'closing'
 
-  const picture = pet.photo ? (
-    <img
-      src={asset(`${pet.photo.base}-640.webp`)}
-      alt=""
-      decoding="async"
-      className="h-full w-full object-cover"
-      style={pet.photo.position ? { objectPosition: pet.photo.position } : undefined}
-    />
-  ) : (
-    <PetIllustration pet={pet} backdrop={BACKDROPS[order % BACKDROPS.length]} />
-  )
+// Cuadrito de una de mis gatitas. Al tocarlo, la foto sale del marco y se amplía;
+// después aparece una notita pegada a su costado.
+export function PetFrame({ slot, pet, order, ...handlers }: PetFrameProps) {
+  const [phase, setPhase] = useState<Phase>('closed')
+  const reduced = useReducedMotion()
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const frameRef = useRef<HTMLSpanElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const figureRef = useRef<HTMLElement>(null)
+  const titleId = `foto-${pet.id}-titulo`
+  const src = (w: number) => asset(`${pet.photo.base}-${w}.webp`)
+  const position = pet.photo.position ? { objectPosition: pet.photo.position } : undefined
+
+  // Transformación que lleva la foto ampliada de vuelta al lugar del cuadrito (para animar entre ambos)
+  const fromFrame = () => {
+    const a = frameRef.current?.getBoundingClientRect()
+    const b = figureRef.current?.getBoundingClientRect()
+    if (!a || !b || !b.width) return 'none'
+    const dx = a.left + a.width / 2 - (b.left + b.width / 2)
+    const dy = a.top + a.height / 2 - (b.top + b.height / 2)
+    return `translate(${dx}px, ${dy}px) rotate(${slot.tilt}deg) scale(${a.width / b.width})`
+  }
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current
+    if (phase !== 'open' || !dialog || dialog.open) return
+    dialog.showModal()
+    if (!reduced) {
+      figureRef.current?.animate([{ transform: fromFrame() }, { transform: 'none' }], {
+        duration: 560,
+        easing: 'cubic-bezier(0.2, 0.8, 0.25, 1.04)',
+      })
+    }
+    // fromFrame solo lee medidas del DOM
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, reduced])
+
+  const close = () => {
+    if (phase !== 'open') return
+    setPhase('closing')
+    const finish = () => {
+      dialogRef.current?.close()
+      setPhase('closed')
+      buttonRef.current?.focus({ preventScroll: true })
+    }
+    const anim = reduced
+      ? null
+      : figureRef.current?.animate([{ transform: 'none' }, { transform: fromFrame() }], {
+          duration: 440,
+          delay: 140,
+          easing: 'cubic-bezier(0.55, 0, 0.7, 0.2)',
+          fill: 'forwards',
+        })
+    if (anim) anim.finished.then(finish, finish)
+    else finish()
+  }
+
+  const closing = phase === 'closing'
 
   return (
     <div
-      data-pet-frame=""
       style={{ ...box(slot.x, slot.y, slot.w, slot.h), animationDelay: `${300 + order * 90}ms` }}
-      className={`absolute pointer-events-auto [animation:scene-in_0.9s_var(--ease-soft)_backwards] ${open ? 'z-30' : 'hover:z-20 focus-within:z-20'}`}
+      className="absolute pointer-events-auto [animation:scene-in_0.9s_var(--ease-soft)_backwards] hover:z-20 focus-within:z-20"
     >
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => onToggle(pet.id)}
-        aria-expanded={open}
-        aria-controls={noteId}
-        aria-label={`Foto de ${pet.name}, mi gatita. ${open ? 'Guardar' : 'Leer'} su notita`}
+        onClick={() => setPhase('open')}
+        aria-haspopup="dialog"
+        aria-label={`Ver la foto de ${pet.name}, mi gatita`}
         {...handlers}
-        className="group relative block h-full w-full cursor-pointer"
+        className={`group relative block h-full w-full cursor-pointer transition-opacity duration-150 ${phase === 'closed' ? '' : 'opacity-0'}`}
       >
+        {/* Patita de apoyo del portarretratos */}
+        <span aria-hidden="true" className="absolute -bottom-[2%] left-[58%] h-[28%] w-[5%] origin-bottom skew-x-[-18deg] bg-ink/25" />
         <span
-          className={`block h-full w-full origin-bottom transition-[rotate,translate] duration-700 ease-[var(--ease-swing)] [rotate:var(--tilt)] group-hover:-translate-y-[5%] group-hover:[rotate:calc(var(--tilt)*0.4)] group-focus-visible:-translate-y-[5%] ${
-            open ? '-translate-y-[5%] [rotate:calc(var(--tilt)*0.4)]' : ''
-          } ${
-            slot.variant === 'stand'
-              ? 'bg-wood-deep p-[8%] shadow-[0_1cqw_1.6cqw_-0.6cqw_rgb(0_0_0/0.35)]'
-              : 'bg-[#fbf7f0] px-[7%] pt-[7%] pb-[22%] shadow-[0_1cqw_1.6cqw_-0.6cqw_rgb(0_0_0/0.3)] dark:bg-[#e9e1d0]'
-          }`}
+          ref={frameRef}
+          className={`block h-full w-full origin-bottom rounded-[2px] p-[9%] [rotate:var(--tilt)] shadow-[0_1cqw_1.6cqw_-0.6cqw_rgb(0_0_0/0.35)] transition-[rotate,translate] duration-700 ease-[var(--ease-swing)] group-hover:-translate-y-[5%] group-hover:[rotate:calc(var(--tilt)*0.4)] group-focus-visible:-translate-y-[5%] ${FRAME_COLOR[slot.frame]}`}
           style={{ '--tilt': `${slot.tilt}deg` } as CSSProperties}
         >
-          {slot.variant === 'polaroid' && (
-            <>
-              {/* Cinta washi que la sostiene */}
-              <span aria-hidden="true" className="absolute -top-[7%] left-1/2 h-[14%] w-[46%] -translate-x-1/2 -rotate-6 bg-teal/70 [clip-path:polygon(4%_0,96%_6%,100%_100%,0_90%)]" />
-              <span aria-hidden="true" className="absolute inset-x-0 bottom-[5%] text-center font-hand text-[2.6cqw] leading-none text-ink-soft dark:text-[#2c2c2c]">
-                {pet.name}
-              </span>
-            </>
-          )}
-          <span className={`block h-full w-full overflow-hidden ${slot.variant === 'stand' ? 'bg-card p-[6%]' : ''}`}>
-            <span className="block h-full w-full overflow-hidden">{picture}</span>
+          <span className="block h-full w-full bg-card p-[5%] shadow-[inset_0_0.15em_0.3em_rgb(0_0_0/0.18)] dark:bg-[#e9e1d0]">
+            <img
+              src={src(640)}
+              alt=""
+              decoding="async"
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-soft)] group-hover:scale-[1.04]"
+              style={position}
+            />
           </span>
         </span>
-        {slot.variant === 'stand' && (
-          <span aria-hidden="true" className="absolute -bottom-[2%] left-[60%] h-[28%] w-[5%] origin-bottom skew-x-[-18deg] bg-wood-deep/80" />
-        )}
         {/* Nombre manuscrito que se asoma al pasar el mouse */}
-        {!open && (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute bottom-[calc(100%+0.3rem)] left-1/2 -translate-x-1/2 translate-y-1 font-hand text-[clamp(1rem,3.2cqw,1.3rem)] leading-none whitespace-nowrap text-rose-deep opacity-0 transition-all duration-300 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-hover:opacity-100"
-          >
-            {pet.name} ♡
-          </span>
-        )}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-[calc(100%+0.3rem)] left-1/2 -translate-x-1/2 translate-y-1 font-hand text-[clamp(1rem,3.2cqw,1.3rem)] leading-none whitespace-nowrap text-rose-deep opacity-0 transition-all duration-300 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-hover:opacity-100"
+        >
+          {pet.name} ♡
+        </span>
       </button>
 
-      {shown && (
-        <div
-          id={noteId}
-          role="note"
-          aria-label={`Notita sobre ${pet.name}`}
-          onAnimationEnd={(e) => e.animationName === 'note-tuck' && setShown(false)}
-          className="pointer-events-auto absolute bottom-[calc(100%+0.5rem)] left-1/2 w-[clamp(9.5rem,36cqw,13rem)] -translate-x-1/2 cursor-default"
+      {phase !== 'closed' && (
+        <dialog
+          ref={dialogRef}
+          aria-labelledby={titleId}
+          data-closing={closing || undefined}
+          onCancel={(e) => {
+            e.preventDefault()
+            close()
+          }}
+          onClick={(e) => e.target === dialogRef.current && close()}
+          // pointer-events-auto: la escena tiene pointer-events: none y el diálogo lo heredaría
+          className="pet-dialog pointer-events-auto m-auto max-w-none overflow-visible bg-transparent p-0"
         >
-          <div
-            className={`relative origin-bottom px-[0.85em] pt-[0.9em] pb-[0.8em] font-hand text-[clamp(1rem,3.4cqw,1.25rem)] leading-[1.12] text-[#3b3427] shadow-[0.2rem_0.35rem_0.9rem_-0.2rem_rgb(0_0_0/0.3)] ${
-              order % 2 ? 'rotate-[2.5deg]' : 'rotate-[-2.5deg]'
-            } bg-[#fdf0b8] dark:bg-[#ece0a4] ${open ? '[animation:note-pop_0.55s_var(--ease-swing)]' : '[animation:note-tuck_0.35s_var(--ease-soft)_forwards]'}`}
-            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 0.9em), calc(100% - 0.9em) 100%, 0 100%)' }}
-          >
-            {/* Esquinita doblada */}
-            <span aria-hidden="true" className="absolute right-0 bottom-0 size-[0.9em] bg-linear-to-tl from-transparent from-50% to-[#e6d48c] to-50% dark:to-[#cdbf86]" />
-            <strong className="block text-[1.12em] font-semibold text-rose-deep dark:text-[#93354f]">{pet.name} ♡</strong>
-            <span className="mt-0.5 block">{pet.note}</span>
+          <div className="flex flex-col items-center sm:flex-row sm:items-start">
+            {/* La foto ampliada, en el mismo marco de color */}
+            <figure
+              ref={figureRef}
+              className={`relative w-[min(74vw,21rem,50vh)] origin-center rounded-[3px] p-[5%] text-[clamp(0.9rem,3vw,1.1rem)] shadow-[0_1.5rem_3rem_-1rem_rgb(0_0_0/0.5)] ${FRAME_COLOR[slot.frame]} ${
+                slot.tilt < 0 ? '-rotate-1' : 'rotate-1'
+              }`}
+            >
+              <div className="bg-card p-[3.5%] shadow-[inset_0_0.15em_0.4em_rgb(0_0_0/0.18)] dark:bg-[#e9e1d0]">
+                <img
+                  src={src(1280)}
+                  srcSet={`${src(640)} 640w, ${src(1280)} 1280w`}
+                  sizes="(min-width: 40rem) 21rem, 74vw"
+                  alt={pet.photo.alt}
+                  decoding="async"
+                  className="aspect-[3/4] w-full object-cover"
+                  style={position}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={close}
+                aria-label={`Cerrar la foto de ${pet.name}`}
+                className="absolute -top-3 -left-3 grid size-9 cursor-pointer place-items-center rounded-full bg-card text-lg leading-none text-ink shadow-md transition-transform hover:scale-110 dark:bg-[#e9e1d0] dark:text-[#2c2c2c]"
+              >
+                ×
+              </button>
+            </figure>
+
+            {/* Notita pegada al costado de la foto */}
+            <div
+              className={`relative z-10 -mt-10 mr-[-0.5rem] w-[min(68vw,12.5rem)] origin-top-left self-end sm:mt-[38%] sm:mr-0 sm:-ml-7 sm:self-auto ${
+                order % 2 ? '-rotate-3' : 'rotate-3'
+              } ${closing ? '[animation:note-unstick_0.2s_ease-in_forwards]' : reduced ? '' : '[animation:note-stick_0.5s_var(--ease-swing)_0.5s_backwards]'}`}
+            >
+              <div
+                className="relative bg-[#fdf0b8] px-[0.85em] pt-[1em] pb-[0.85em] font-hand text-[1.3rem] leading-[1.12] text-[#3b3427] dark:bg-[#ece0a4]"
+                style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 0.9em), calc(100% - 0.9em) 100%, 0 100%)' }}
+              >
+                {/* Esquinita doblada */}
+                <span aria-hidden="true" className="absolute right-0 bottom-0 size-[0.9em] bg-linear-to-tl from-transparent from-50% to-[#e6d48c] to-50% dark:to-[#cdbf86]" />
+                <strong id={titleId} className="block text-[1.15em] font-semibold text-rose-deep dark:text-[#93354f]">
+                  {pet.name} ♡
+                </strong>
+                <p className="mt-0.5">{pet.note}</p>
+              </div>
+              {/* Sombra (el recorte de la esquina no deja usar box-shadow en el papel) */}
+              <span aria-hidden="true" className="absolute inset-0 -z-10 translate-x-1 translate-y-1.5 bg-black/20 blur-[6px]" />
+              {/* Cinta que la pega a la foto */}
+              <span aria-hidden="true" className="absolute -top-1.5 -left-4 h-[0.95rem] w-[3.4rem] -rotate-[32deg] bg-rose-soft/90 shadow-sm [clip-path:polygon(3%_0,97%_6%,100%_100%,0_92%)] dark:bg-[#f1d1d1]/85" />
+            </div>
           </div>
-          {/* Cinta de papel arriba */}
-          <span
-            aria-hidden="true"
-            className={`pointer-events-none absolute -top-[0.45rem] left-1/2 h-[0.95rem] w-[3.4rem] -translate-x-1/2 bg-rose-soft/90 shadow-sm [clip-path:polygon(3%_0,97%_6%,100%_100%,0_92%)] dark:bg-[#f1d1d1]/85 ${
-              open ? '[animation:note-pop_0.55s_var(--ease-swing)]' : '[animation:note-tuck_0.35s_var(--ease-soft)_forwards]'
-            } ${order % 2 ? 'rotate-[4deg]' : 'rotate-[-4deg]'}`}
-          />
-        </div>
+        </dialog>
       )}
     </div>
-  )
-}
-
-/** Retrato ilustrado, para cuando todavía no hay foto real. */
-function PetIllustration({ pet, backdrop }: { pet: PetPortrait; backdrop: string }) {
-  const clipId = `pet-head-${pet.id}`
-  const light = pet.markings === 'tuxedo' ? pet.patch : undefined
-  return (
-    <svg viewBox="0 0 60 64" preserveAspectRatio="xMidYMid slice" className="h-full w-full transition-transform duration-700 ease-[var(--ease-soft)] group-hover:scale-[1.05]">
-      <defs>
-        <clipPath id={clipId}>
-          <ellipse cx="30" cy="30" rx="17" ry="14" />
-          <path d="M13 26 L15 8 L27 18 Z M47 26 L45 8 L33 18 Z" />
-        </clipPath>
-      </defs>
-      <rect width="60" height="64" fill={backdrop} className="dark:brightness-[0.82]" />
-      <circle cx="49" cy="12" r="5" fill="#ffffff" opacity="0.45" />
-      {/* Hombros y pechito */}
-      <path d="M8 66 C 9 50, 19 42, 30 42 C 41 42, 51 50, 52 66 Z" fill={pet.fur} />
-      {light && <path d="M23 66 C 23 54, 26 47, 30 46 C 34 47, 37 54, 37 66 Z" fill={light} />}
-      {/* Orejas */}
-      <path d="M13 26 L15 8 L27 18 Z M47 26 L45 8 L33 18 Z" fill={pet.fur} />
-      <path d="M16 22 L17 12 L24 18 Z M44 22 L43 12 L36 18 Z" fill="#d88da0" opacity="0.8" />
-      <ellipse cx="30" cy="30" rx="17" ry="14" fill={pet.fur} />
-      {/* Mancha sobre un ojo (Micha) o hocico claro (Nami) */}
-      <g clipPath={`url(#${clipId})`}>
-        {pet.markings === 'patch' && pet.patch && <ellipse cx="18" cy="18" rx="12" ry="11" fill={pet.patch} />}
-        {pet.markings === 'tuxedo' && light && <path d="M22 44 C 22 36, 26 31, 30 31 C 34 31, 38 36, 38 44 Z" fill={light} />}
-      </g>
-      {[23, 37].map((cx) => (
-        <g key={cx}>
-          <ellipse cx={cx} cy="29" rx="3.4" ry="3.6" fill={pet.eyes} />
-          <ellipse cx={cx} cy="29" rx="1.3" ry="2.8" fill="#141414" />
-          <circle cx={cx - 1} cy="27.6" r="0.8" fill="#ffffff" />
-        </g>
-      ))}
-      <path d="M28.4 34 L31.6 34 L30 36 Z" fill="#e7a0b0" />
-      <path d="M30 36 Q28.6 38.4 27 37.4 M30 36 Q31.4 38.4 33 37.4" stroke={light ? '#141414' : '#00000055'} strokeOpacity="0.45" strokeWidth="0.6" fill="none" strokeLinecap="round" />
-      <circle cx="19.5" cy="35" r="2.4" fill="#d88da0" opacity="0.3" />
-      <circle cx="40.5" cy="35" r="2.4" fill="#d88da0" opacity="0.3" />
-    </svg>
   )
 }

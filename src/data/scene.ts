@@ -57,19 +57,20 @@ export interface PetSlot {
   w: number
   h: number
   tilt: number
-  variant: 'stand' | 'polaroid'
+  /** Color del marco, de la paleta de la página */
+  frame: 'rose' | 'teal'
 }
 
 export const petFrames: PetSlot[] = [
-  { petId: 'micha', x: 128, y: 494, w: 78, h: 92, tilt: -3, variant: 'stand' },
-  { petId: 'nami', x: 218, y: 508, w: 70, h: 80, tilt: 5, variant: 'polaroid' },
+  { petId: 'micha', x: 128, y: 492, w: 76, h: 94, tilt: -3, frame: 'rose' },
+  { petId: 'nami', x: 216, y: 506, w: 68, h: 80, tilt: 4, frame: 'teal' },
 ]
 
 /** Bolita de lana: su lugar de descanso en la repisa de abajo */
 export const yarnHome = { x: 298, y: 554, size: 32 }
 
 /** Zona del gato (centro de la cabeza) para saber cuándo la lana está cerca */
-export const catPlayZone = { x: 482, y: 236, radius: 110 }
+export const catPlayZone = { x: 487, y: 246, radius: 110 }
 
 /** Convierte unidades de la escena en porcentajes para posicionar con CSS */
 export function box(x: number, y: number, w: number, h: number) {

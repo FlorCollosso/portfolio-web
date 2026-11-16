@@ -12,11 +12,20 @@ export interface AttentionHandlers {
 }
 
 // Etiqueta tipo museo que aparece al pasar el mouse o con el foco del teclado.
-export function SceneLabel({ title, detail, place = 'top' }: { title: string; detail: string; place?: 'top' | 'bottom' }) {
+interface SceneLabelProps {
+  title: string
+  detail: string
+  place?: 'top' | 'bottom'
+  /** Centro del objeto en unidades de la escena: cerca de un borde, el cartel se alinea hacia adentro */
+  at?: number
+}
+
+export function SceneLabel({ title, detail, place = 'top', at = SCENE.width / 2 }: SceneLabelProps) {
+  const align = at < 150 ? 'left-[-0.4rem]' : at > SCENE.width - 150 ? 'right-[-0.4rem]' : 'left-1/2 -translate-x-1/2'
   return (
     <span
       aria-hidden="true"
-      className={`pointer-events-none absolute left-1/2 z-30 w-max max-w-48 -translate-x-1/2 rounded-md border border-line bg-card px-3 py-2 text-left opacity-0 shadow-lg shadow-ink/10 transition-all duration-300 ease-[var(--ease-soft)] group-focus-visible:opacity-100 [@media(hover:hover)]:group-hover:opacity-100 ${
+      className={`pointer-events-none absolute z-30 w-max max-w-48 rounded-md border border-line bg-card px-3 py-2 text-left opacity-0 shadow-lg shadow-ink/10 transition-all duration-300 ease-[var(--ease-soft)] group-focus-visible:opacity-100 [@media(hover:hover)]:group-hover:opacity-100 ${align} ${
         place === 'top'
           ? 'bottom-[calc(100%+0.6rem)] translate-y-1 group-focus-visible:translate-y-0 [@media(hover:hover)]:group-hover:translate-y-0'
           : 'top-[calc(100%+0.6rem)] -translate-y-1 group-focus-visible:translate-y-0 [@media(hover:hover)]:group-hover:translate-y-0'
@@ -88,7 +97,7 @@ export function Book({ slot, project, lying = false, baseY, order, onOpen, ...ha
       <span className={`block h-full w-full transition-transform duration-500 ease-[var(--ease-swing)] ${lying ? 'group-hover:-translate-x-[6%] group-focus-visible:-translate-x-[6%]' : 'group-hover:-translate-y-[9%] group-focus-visible:-translate-y-[9%]'}`}>
         {spine}
       </span>
-      <SceneLabel title={project.title} detail={detailOf(project)} />
+      <SceneLabel title={project.title} detail={detailOf(project)} at={slot.x + slot.w / 2} />
     </button>
   )
 }
@@ -148,7 +157,7 @@ export function Frame({ slot, project, order, onOpen, ...handlers }: FrameProps)
       {slot.variant === 'stand' && (
         <span aria-hidden="true" className="absolute -bottom-[2%] left-[58%] h-[30%] w-[5%] origin-bottom skew-x-[-18deg] bg-ink-soft/80" />
       )}
-      <SceneLabel title={project.title} detail={detailOf(project)} place={slot.y < SCENE.shelfTop ? 'bottom' : 'top'} />
+      <SceneLabel title={project.title} detail={detailOf(project)} place={slot.y < SCENE.shelfTop ? 'bottom' : 'top'} at={slot.x + slot.w / 2} />
     </button>
   )
 }

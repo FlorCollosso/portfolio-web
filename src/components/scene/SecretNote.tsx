@@ -7,10 +7,10 @@ interface SecretNoteProps extends AttentionHandlers {
   style: CSSProperties
 }
 
-type Phase = 'hidden' | 'open' | 'folding'
+type Phase = 'hidden' | 'open' | 'closing'
 
 // Papelito asomado entre dos libros. Al tocarlo se despliega una nota escrita a mano;
-// al doblarla, se pliega, se achica y vuelve volando a su escondite.
+// al guardarla, se achica y se desvanece deslizándose hacia su escondite.
 export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(function SecretNote({ note, style, ...handlers }, ref) {
   const [phase, setPhase] = useState<Phase>('hidden')
   const [found, setFound] = useState(false)
@@ -28,8 +28,8 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
     if (phase === 'hidden' && dialog.open) dialog.close()
   }, [phase])
 
-  // Empieza a doblarse: calcula hacia dónde tiene que volar (el papelito entre los libros)
-  const fold = () => {
+  // Empieza a guardarse: calcula hacia dónde se desliza (el papelito entre los libros)
+  const close = () => {
     if (phase !== 'open') return
     const paper = paperRef.current?.getBoundingClientRect()
     const home = triggerRef.current?.getBoundingClientRect()
@@ -39,16 +39,16 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
         y: home.top + home.height / 2 - (paper.top + paper.height / 2),
       })
     }
-    setPhase('folding')
+    setPhase('closing')
   }
 
   const onFolded = (e: AnimationEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget || e.animationName !== 'note-fold') return
+    if (e.target !== e.currentTarget || e.animationName !== 'note-away') return
     setPhase('hidden')
     setLanded((n) => n + 1)
   }
 
-  const folding = phase === 'folding'
+  const closing = phase === 'closing'
 
   return (
     <>
@@ -86,14 +86,14 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
 
       <dialog
         ref={dialogRef}
-        data-folding={folding || undefined}
+        data-closing={closing || undefined}
         onCancel={(e) => {
-          // Escape también dobla la nota en vez de cerrarla de golpe
+          // Escape también la guarda con la animación en vez de cerrarla de golpe
           e.preventDefault()
-          fold()
+          close()
         }}
         onClose={() => setPhase('hidden')}
-        onClick={(e) => e.target === dialogRef.current && fold()}
+        onClick={(e) => e.target === dialogRef.current && close()}
         aria-labelledby="nota-secreta-titulo"
         // pointer-events-auto: el diálogo vive dentro de la capa de la escena (pointer-events: none),
         // y sin esto heredaba ese valor y ningún clic llegaba a la nota ni a su botón.
@@ -104,16 +104,9 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
           onAnimationEnd={onFolded}
           style={{ '--to-x': `${flight.x}px`, '--to-y': `${flight.y}px` } as CSSProperties}
           className={`relative bg-[#fbf6ea] px-7 pt-10 pb-8 text-[#2c2a26] shadow-2xl [background-image:repeating-linear-gradient(transparent_0_1.95rem,rgb(128_189_187/0.35)_1.95rem_2rem)] [background-position:0_0.42rem] sm:px-10 ${
-            folding ? 'pointer-events-none [animation:note-fold_1.15s_cubic-bezier(0.55,0,0.3,1)_forwards]' : '-rotate-1 [animation:unfold_0.7s_var(--ease-soft)]'
+            closing ? 'pointer-events-none [animation:note-away_0.42s_cubic-bezier(0.45,0,0.75,0.35)_forwards]' : '-rotate-1 [animation:unfold_0.7s_var(--ease-soft)]'
           }`}
         >
-          {/* Pliegues que se marcan mientras se dobla */}
-          <span
-            aria-hidden="true"
-            className={`pointer-events-none absolute inset-0 z-10 opacity-0 [background:linear-gradient(to_bottom,transparent_32%,rgb(0_0_0/0.14)_33.3%,rgb(255_255_255/0.4)_34%,transparent_36%,transparent_65%,rgb(0_0_0/0.14)_66.6%,rgb(255_255_255/0.4)_67.3%,transparent_69%)] ${
-              folding ? '[animation:crease_1.15s_ease-out_forwards]' : ''
-            }`}
-          />
           {/* Cinta de papel */}
           <span aria-hidden="true" className="absolute -top-3 left-1/2 h-7 w-28 -translate-x-1/2 rotate-2 bg-rose-soft/90 shadow-sm [clip-path:polygon(3%_0,97%_4%,100%_100%,0_92%)] dark:bg-[#f1d1d1]/90" />
           <span aria-hidden="true" className="absolute inset-y-0 left-6 w-px bg-rose/50 sm:left-8" />
@@ -132,8 +125,8 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
           <div className="mt-6 flex justify-end">
             <button
               type="button"
-              onClick={fold}
-              disabled={folding}
+              onClick={close}
+              disabled={closing}
               className="cursor-pointer rounded-full border border-[#2c2a26]/20 px-4 py-2 text-sm font-semibold text-[#2c2a26] transition-colors hover:border-[#2c2a26] hover:bg-[#2c2a26] hover:text-[#fbf6ea]"
             >
               Doblar la nota

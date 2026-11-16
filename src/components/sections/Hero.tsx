@@ -70,7 +70,7 @@ export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps
           </div>
         </div>
 
-        <figure className="mx-auto w-full max-w-xl lg:mr-0 lg:max-w-[min(100%,calc((100svh-9rem)*0.909))]">
+        <figure className="mx-auto w-full max-w-xl lg:mr-0 lg:max-w-[min(100%,calc((100svh-9rem)*0.97))]">
           <LibraryScene projects={projects} profile={profile} note={note} pets={pets} onOpenProject={onOpenProject} />
           <figcaption className="mt-4 flex items-start gap-2 px-2 text-sm text-muted">
             <span aria-hidden="true" className="mt-1.5 inline-block size-2 shrink-0 rotate-45 bg-rose" />

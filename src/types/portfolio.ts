@@ -87,20 +87,14 @@ export interface SecretNote {
 export interface PetPortrait {
   id: string
   name: string
-  /** Frase corta de la notita que aparece al tocar el cuadro */
+  /** Frase corta de la notita que aparece pegada al costado de la foto ampliada */
   note: string
   /**
-   * Foto real (opcional). Ruta base sin sufijo, igual que los proyectos:
-   * "/images/gatitas/micha" → micha-640.webp. Si no hay foto, se muestra un retrato ilustrado.
+   * Foto real. Ruta base sin sufijo, igual que los proyectos:
+   * "/images/gatitas/micha" → micha-640.webp y micha-1280.webp.
+   * `position` elige el encuadre del recorte (object-position).
    */
-  photo?: ResponsiveImage
-  /** Colores del retrato ilustrado (mientras no haya foto) */
-  fur: string
-  /** Color de las manchas o rayitas del pelaje */
-  patch?: string
-  /** Dibujo del pelaje: una mancha sobre un ojo, o "smoking" (hocico y pechito claros) */
-  markings?: 'patch' | 'tuxedo'
-  eyes: string
+  photo: ResponsiveImage
 }
 
 export interface PortfolioData {

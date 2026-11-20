@@ -4,6 +4,7 @@ import { useReducedMotion } from '../../hooks/useMediaQuery'
 import type { PetPortrait } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
 import type { AttentionHandlers } from './ProjectObjects'
+import { useI18n } from '../../i18n/useI18n'
 
 interface PetFrameProps extends AttentionHandlers {
   slot: PetSlot
@@ -22,6 +23,7 @@ type Phase = 'closed' | 'open' | 'closing'
 // Cuadrito de una de mis gatitas. Al tocarlo, la foto sale del marco y se amplía;
 // después aparece una notita pegada a su costado.
 export function PetFrame({ slot, pet, order, ...handlers }: PetFrameProps) {
+  const { t } = useI18n()
   const [phase, setPhase] = useState<Phase>('closed')
   const reduced = useReducedMotion()
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -88,7 +90,7 @@ export function PetFrame({ slot, pet, order, ...handlers }: PetFrameProps) {
         type="button"
         onClick={() => setPhase('open')}
         aria-haspopup="dialog"
-        aria-label={`Ver la foto de ${pet.name}, mi gatita`}
+        aria-label={t('scene.petOpen', { name: pet.name })}
         {...handlers}
         className={`group relative block h-full w-full cursor-pointer transition-opacity duration-150 ${phase === 'closed' ? '' : 'opacity-0'}`}
       >
@@ -154,7 +156,7 @@ export function PetFrame({ slot, pet, order, ...handlers }: PetFrameProps) {
               <button
                 type="button"
                 onClick={close}
-                aria-label={`Cerrar la foto de ${pet.name}`}
+                aria-label={t('scene.petClose', { name: pet.name })}
                 className="absolute -top-3 -left-3 grid size-9 cursor-pointer place-items-center rounded-full bg-card text-lg leading-none text-ink shadow-md transition-transform hover:scale-110 dark:bg-[#e9e1d0] dark:text-[#2c2c2c]"
               >
                 ×

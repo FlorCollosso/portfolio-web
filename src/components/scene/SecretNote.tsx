@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from 'react'
 import type { SecretNote as SecretNoteData } from '../../types/portfolio'
 import type { AttentionHandlers } from './ProjectObjects'
+import { useI18n } from '../../i18n/useI18n'
 
 interface SecretNoteProps extends AttentionHandlers {
   note: SecretNoteData
@@ -12,6 +13,7 @@ type Phase = 'hidden' | 'open' | 'closing'
 // Papelito asomado entre dos libros. Al tocarlo se despliega una nota escrita a mano;
 // al guardarla, se achica y se desvanece deslizándose hacia su escondite.
 export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(function SecretNote({ note, style, ...handlers }, ref) {
+  const { t } = useI18n()
   const [phase, setPhase] = useState<Phase>('hidden')
   const [found, setFound] = useState(false)
   // Cambia cada vez que la nota vuelve a su lugar, para que el papelito "la reciba"
@@ -63,7 +65,7 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
           setPhase('open')
           setFound(true)
         }}
-        aria-label={found ? 'Volver a leer la nota escondida' : 'Hay un papelito escondido entre los libros'}
+        aria-label={found ? t('scene.noteAgain') : t('scene.noteHidden')}
         aria-haspopup="dialog"
         style={style}
         {...handlers}
@@ -129,7 +131,7 @@ export const SecretNote = forwardRef<HTMLButtonElement, SecretNoteProps>(functio
               disabled={closing}
               className="cursor-pointer rounded-full border border-[#2c2a26]/20 px-4 py-2 text-sm font-semibold text-[#2c2a26] transition-colors hover:border-[#2c2a26] hover:bg-[#2c2a26] hover:text-[#fbf6ea]"
             >
-              Doblar la nota
+              {t('scene.noteFold')}
             </button>
           </div>
         </div>

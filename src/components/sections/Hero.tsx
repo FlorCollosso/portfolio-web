@@ -1,5 +1,6 @@
 import { FiArrowDown, FiDownload, FiMapPin } from 'react-icons/fi'
 import type { PetPortrait, Profile, Project, SecretNote } from '../../types/portfolio'
+import { useI18n } from '../../i18n/useI18n'
 import { asset } from '../../utils/asset'
 import { LibraryScene } from '../scene/LibraryScene'
 import { ButtonLink } from '../ui/ButtonLink'
@@ -17,13 +18,15 @@ interface HeroProps {
 const enter = (delay: string) => ({ animation: `scene-in 1s var(--ease-soft) ${delay} backwards` })
 
 export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps) {
+  const { t } = useI18n()
   const firstName = profile.name.split(' ')[0]
-  const [roleA, roleB] = profile.role.split(' y ')
+  const [roleA, roleB] = profile.role.split(/ y | and /)
 
   return (
     <section id="inicio" aria-labelledby="hero-title" className="relative overflow-hidden px-4 pt-24 pb-20 sm:px-6 lg:pt-28">
-      {/* Manchas de color heredadas del diseño original, ahora más quietas */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+      {/* Manchas de color heredadas del diseño original, ahora más quietas. Se desvanecen antes del borde
+          de la sección para que la luz no se corte de golpe */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 [mask-image:linear-gradient(to_bottom,black_45%,transparent_92%)]">
         <div className="absolute -top-40 -left-40 size-120 rounded-full bg-teal/25 blur-3xl dark:bg-teal/10" />
         <div className="absolute top-1/2 right-[-10rem] size-112 rounded-full bg-rose/20 blur-3xl dark:bg-[#ffd79a]/8" />
       </div>
@@ -35,11 +38,11 @@ export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps
               <span className="absolute inset-0 animate-ping rounded-full bg-teal opacity-60 motion-reduce:hidden" />
               <span className="relative size-2 rounded-full bg-teal-deep" />
             </span>
-            Abierta a nuevas oportunidades
+            {t('hero.status')}
           </p>
 
           <h1 id="hero-title" className="mt-8 font-serif text-6xl leading-[0.92] font-light tracking-[-0.03em] sm:text-7xl lg:text-[5.4rem]" style={enter("80ms")}>
-            Hola, soy <em className="font-normal text-rose-deep">{firstName}</em>.
+            {t('hero.hello')} <em className="font-normal text-rose-deep">{firstName}</em>.
           </h1>
 
           <p className="mt-6 text-sm font-semibold tracking-[0.14em] text-teal-deep uppercase" style={enter("160ms")}>
@@ -56,27 +59,26 @@ export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps
 
           <div className="mt-9 flex flex-wrap items-center gap-3" style={enter("360ms")}>
             <ButtonLink href="#proyectos" icon={<FiArrowDown aria-hidden="true" />}>
-              Ver proyectos
+              {t('hero.ctaProjects')}
             </ButtonLink>
             <ButtonLink href={asset(profile.cvUrl)} download variant="secondary" icon={<FiDownload aria-hidden="true" />}>
-              Descargar CV
+              {t('hero.ctaCv')}
             </ButtonLink>
           </div>
 
           <div className="mt-10 hidden lg:block" style={enter("1.4s")}>
           <Handnote arrow="right" tilt={-4}>
-            pasá, este es mi estudio
+            {t('hero.note')}
           </Handnote>
           </div>
         </div>
 
-        <figure className="mx-auto w-full max-w-xl lg:mr-0 lg:max-w-[min(100%,calc((100svh-9rem)*0.97))]">
+        <figure className="mx-auto w-full max-w-xl lg:mr-0 lg:max-w-[min(100%,calc((100svh-9rem)*0.942))]">
           <LibraryScene projects={projects} profile={profile} note={note} pets={pets} onOpenProject={onOpenProject} />
           <figcaption className="mt-4 flex items-start gap-2 px-2 text-sm text-muted">
             <span aria-hidden="true" className="mt-1.5 inline-block size-2 shrink-0 rotate-45 bg-rose" />
             <span>
-              Cada libro con título y cada cuadro de la pared son proyectos: tocalos para abrirlos. Abajo están Micha y Nami, mis
-              gatitas. La lámpara cambia la luz del sitio y la lana es para el gato. <span className="font-hand text-lg text-rose-deep">Y hay algo escondido.</span>
+              {t('hero.caption')} <span className="font-hand text-lg text-rose-deep">{t('hero.captionSecret')}</span>
             </span>
           </figcaption>
         </figure>

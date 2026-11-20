@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/useI18n'
 import type { TimelineItem } from '../../types/portfolio'
 import { Reveal } from '../ui/Reveal'
 import { Section } from '../ui/Section'
@@ -5,6 +6,7 @@ import { Tag } from '../ui/Tag'
 
 // Trayectoria como índice de libro: período, puntos guía y título.
 function Ledger({ title, items, detailed = false }: { title: string; items: TimelineItem[]; detailed?: boolean }) {
+  const { t } = useI18n()
   return (
     <div>
       <h3 className="border-b border-ink pb-3 font-serif text-2xl font-normal italic">{title}</h3>
@@ -33,7 +35,7 @@ function Ledger({ title, items, detailed = false }: { title: string; items: Time
                 </ul>
               )}
               {detailed && item.tags && (
-                <ul className="mt-4 flex flex-wrap gap-2" aria-label="Tecnologías">
+                <ul className="mt-4 flex flex-wrap gap-2" aria-label={t('experience.tech')}>
                   {item.tags.map((tag) => (
                     <li key={tag}>
                       <Tag>{tag}</Tag>
@@ -50,11 +52,12 @@ function Ledger({ title, items, detailed = false }: { title: string; items: Time
 }
 
 export function Experience({ experience, education }: { experience: TimelineItem[]; education: TimelineItem[] }) {
+  const { t } = useI18n()
   return (
-    <Section id="trayectoria" number="04" eyebrow="Trayectoria" title={<>Dónde trabajé, <em>dónde aprendí</em></>} className="bg-card/60">
+    <Section id="trayectoria" number="04" eyebrow={t('experience.eyebrow')} title={<>{t('experience.titleA')} <em>{t('experience.titleB')}</em></>} className="bg-card/60">
       <div className="grid gap-16 lg:grid-cols-[1.4fr_1fr] lg:gap-20">
-        <Ledger title="Experiencia" items={experience} detailed />
-        <Ledger title="Formación" items={education} />
+        <Ledger title={t('experience.work')} items={experience} detailed />
+        <Ledger title={t('experience.education')} items={education} />
       </div>
     </Section>
   )

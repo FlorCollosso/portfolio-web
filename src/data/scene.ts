@@ -25,7 +25,8 @@ export const books: BookSlot[] = [
   { projectId: 'rodanteros', x: 138, w: 46, h: 156, color: '#c97a8e', ink: '#fff6ef', band: '#f1d1d1' },
   { projectId: 'spark', x: 186, w: 42, h: 148, color: '#1d1d21', ink: '#c9ef6b', band: '#c9ef6b' },
   { x: 228, w: 26, h: 124, color: '#d6a24a', ink: '#5a3e1c', band: '#8f6948' },
-  { x: 256, w: 24, h: 130, color: '#80bdbb', ink: '#18403f', band: '#f7f0e8', tilt: 13 },
+  // Inclinado hacia la izquierda: se apoya en el borde de arriba del libro vecino (más bajo)
+  { x: 276, w: 24, h: 130, color: '#80bdbb', ink: '#18403f', band: '#f7f0e8', tilt: -10 },
 ]
 
 /** Libros acostados (la pila donde se sube el gato) */
@@ -70,7 +71,7 @@ export const petFrames: PetSlot[] = [
 export const yarnHome = { x: 298, y: 554, size: 32 }
 
 /** Zona del gato (centro de la cabeza) para saber cuándo la lana está cerca */
-export const catPlayZone = { x: 487, y: 246, radius: 110 }
+export const catPlayZone = { x: 487, y: 227, radius: 115 }
 
 /** Convierte unidades de la escena en porcentajes para posicionar con CSS */
 export function box(x: number, y: number, w: number, h: number) {

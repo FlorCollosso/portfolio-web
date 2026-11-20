@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { FiArrowUpRight, FiExternalLink } from 'react-icons/fi'
-import { categoryLabels } from '../../data/labels'
 import { useFinePointer } from '../../hooks/useMediaQuery'
+import { useI18n } from '../../i18n/useI18n'
 import type { Project, ProjectCategory } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
 import { buttonBase, ButtonLink } from '../ui/ButtonLink'
@@ -18,6 +18,7 @@ interface ProjectsProps {
 }
 
 export function Projects({ projects, onOpen }: ProjectsProps) {
+  const { t } = useI18n()
   const featured = projects.filter((p) => p.featured)
   const rest = projects.filter((p) => !p.featured)
 
@@ -25,9 +26,9 @@ export function Projects({ projects, onOpen }: ProjectsProps) {
     <Section
       id="proyectos"
       number="02"
-      eyebrow="La colección"
-      title={<>Diseño que se puede usar, <em>código que se puede ver</em></>}
-      intro="Primero, los proyectos donde se ve el puente entre diseño y desarrollo. Después, el archivo de identidad y diseño gráfico."
+      eyebrow={t('projects.eyebrow')}
+      title={<>{t('projects.titleA')} <em>{t('projects.titleB')}</em></>}
+      intro={t('projects.intro')}
       className="bg-card/60"
     >
       <div className="space-y-24 md:space-y-36">
@@ -45,12 +46,13 @@ const pad = (n: number) => String(n).padStart(2, '0')
 
 // Proyecto destacado, maquetado como una doble página de revista.
 function FeaturedProject({ project, index, onOpen }: { project: Project; index: number; onOpen: (p: Project) => void }) {
+  const { t } = useI18n()
   const flip = index % 2 === 1
 
   return (
     <article className="grid items-center gap-8 md:grid-cols-12 md:gap-10">
       <Reveal className={`md:col-span-7 ${flip ? 'md:order-2' : ''}`}>
-        <button type="button" onClick={() => onOpen(project)} className="group relative block w-full text-left" aria-label={`Abrir ${project.title}`}>
+        <button type="button" onClick={() => onOpen(project)} className="group relative block w-full text-left" aria-label={t('projects.openAria', { title: project.title })}>
           <span
             aria-hidden="true"
             className={`absolute inset-0 rounded-[0.4rem] transition-transform duration-700 ease-[var(--ease-swing)] ${
@@ -71,35 +73,35 @@ function FeaturedProject({ project, index, onOpen }: { project: Project; index: 
               flip ? '-left-3' : '-right-3'
             }`}
           >
-            abrir
+            {t('projects.stampA')}
             <br />
-            el caso
+            {t('projects.stampB')}
           </span>
         </button>
       </Reveal>
 
       <Reveal delay={120} className={`md:col-span-5 ${flip ? 'md:order-1' : ''}`}>
         <p className="flex items-baseline gap-3 text-sm text-muted">
-          <span className="font-serif text-2xl text-rose-deep italic">N.º {pad(index + 1)}</span>
+          <span className="font-serif text-2xl text-rose-deep italic">{t('projects.number', { n: pad(index + 1) })}</span>
           <span className="h-px flex-1 bg-line" aria-hidden="true" />
           <span>{project.year}</span>
         </p>
-        <p className="mt-6 text-xs font-semibold tracking-[0.16em] text-teal-deep uppercase">{categoryLabels[project.category]}</p>
+        <p className="mt-6 text-xs font-semibold tracking-[0.16em] text-teal-deep uppercase">{t(`category.${project.category}`)}</p>
         <h3 className="mt-2 font-serif text-4xl leading-none font-normal tracking-[-0.02em] sm:text-5xl">{project.title}</h3>
         <p className="mt-5 text-lg text-muted text-pretty">{project.summary}</p>
         <p className="mt-5 text-sm">
-          <span className="font-serif text-teal-deep italic">Mi rol — </span>
+          <span className="font-serif text-teal-deep italic">{t('projects.myRole')}</span>
           {project.role}
         </p>
         <p className="mt-4 text-sm text-muted">{project.tags.join('  /  ')}</p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => onOpen(project)} className={`${buttonBase} border border-ink/20 bg-card hover:border-ink`}>
-            Ver el proceso <FiArrowUpRight aria-hidden="true" />
+            {t('projects.seeProcess')} <FiArrowUpRight aria-hidden="true" />
           </button>
           {project.links.live && (
             <ButtonLink href={project.links.live} external variant="ghost" icon={<FiExternalLink aria-hidden="true" />}>
-              Sitio en vivo
+              {t('projects.live')}
             </ButtonLink>
           )}
         </div>
@@ -110,6 +112,7 @@ function FeaturedProject({ project, index, onOpen }: { project: Project; index: 
 
 // Archivo: el resto de los trabajos como índice de catálogo, con vista previa que sigue al mouse.
 function Archive({ projects, onOpen, startAt }: { projects: Project[]; onOpen: (p: Project) => void; startAt: number }) {
+  const { t } = useI18n()
   const [filter, setFilter] = useState<Filter>('all')
   const [hovered, setHovered] = useState<Project | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -132,14 +135,14 @@ function Archive({ projects, onOpen, startAt }: { projects: Project[]; onOpen: (
       <Reveal className="flex flex-col gap-6 border-b border-ink pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h3 className="font-serif text-3xl font-normal tracking-tight sm:text-4xl">
-            El <em className="text-rose-deep">archivo</em>
+            {t('archive.titleA')} <em className="text-rose-deep">{t('archive.titleB')}</em>
           </h3>
           <Handnote className="mt-1" tilt={-2}>
-            identidad, editorial y piezas gráficas
+            {t('archive.note')}
           </Handnote>
         </div>
         {filters.length > 2 && (
-          <div role="group" aria-label="Filtrar el archivo" className="flex flex-wrap gap-x-5 gap-y-2">
+          <div role="group" aria-label={t('archive.filter')} className="flex flex-wrap gap-x-5 gap-y-2">
             {filters.map((f) => (
               <button
                 key={f}
@@ -150,7 +153,7 @@ function Archive({ projects, onOpen, startAt }: { projects: Project[]; onOpen: (
                   filter === f ? 'text-ink underline decoration-rose decoration-2' : 'text-muted hover:text-ink'
                 }`}
               >
-                {f === 'all' ? 'Todo' : categoryLabels[f]}
+                {f === 'all' ? t('archive.all') : t(`category.${f}`)}
               </button>
             ))}
           </div>
@@ -174,7 +177,7 @@ function Archive({ projects, onOpen, startAt }: { projects: Project[]; onOpen: (
                 </span>
                 <span className="col-start-2 text-sm text-muted sm:col-start-auto">
                   {project.role}
-                  <span className="sr-only"> · {categoryLabels[project.category]}</span>
+                  <span className="sr-only"> · {t(`category.${project.category}`)}</span>
                 </span>
                 <span className="hidden text-sm text-muted sm:block">{project.year ?? '—'}</span>
                 <FiArrowUpRight

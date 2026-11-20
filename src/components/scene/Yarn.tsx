@@ -1,5 +1,7 @@
 import { forwardRef, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type RefObject } from 'react'
 import { box, catPlayZone, SCENE, yarnHome } from '../../data/scene'
+import { YARN_BALL, YARN_THREAD } from './decor/decorParts'
+import { useI18n } from '../../i18n/useI18n'
 
 interface YarnProps {
   /** La escena, para pasar píxeles a unidades de la escena */
@@ -14,6 +16,9 @@ interface YarnProps {
 type Mode = 'rest' | 'drag' | 'fly' | 'return'
 
 const S = yarnHome.size
+// La bola del asset tiene centro (28.15, 27.78) y radio ~27: el viewBox la deja centrada (así gira sobre sí misma)
+// y con un poco de margen, para que ocupe lo mismo que la anterior
+const YARN_VIEWBOX = '-3 -3.37 62.3 62.3'
 // Adonde llega la lana cuando se la "lanza" al gato con un toque o con el teclado
 const TOSS = { dx: catPlayZone.x - 82 - yarnHome.x, dy: 300 - yarnHome.y }
 
@@ -22,6 +27,7 @@ const isNear = (dx: number, dy: number) =>
 
 // Bolita de lana: se puede agarrar y llevar hasta el gato para que juegue.
 export const Yarn = forwardRef<HTMLButtonElement, YarnProps>(function Yarn({ sceneRef, reduced, onNear, onBat }, ref) {
+  const { t } = useI18n()
   const [pos, setPos] = useState({ dx: 0, dy: 0, rot: 0 })
   const [mode, setMode] = useState<Mode>('rest')
   const drag = useRef<{ id: number; sx: number; sy: number; dx: number; dy: number; rot: number; scale: number; moved: boolean } | null>(null)
@@ -151,7 +157,7 @@ export const Yarn = forwardRef<HTMLButtonElement, YarnProps>(function Yarn({ sce
       onLostPointerCapture={onPointerCancel}
       onClick={onClick}
       onKeyDown={onKeyDown}
-      aria-label="Bolita de lana: llevala hasta el gato para que juegue"
+      aria-label={t('scene.yarn')}
       style={{
         ...box(yarnHome.x, yarnHome.y, S, S),
         transform: `translate(${(pos.dx / S) * 100}%, ${(pos.dy / S) * 100}%)`,
@@ -161,39 +167,26 @@ export const Yarn = forwardRef<HTMLButtonElement, YarnProps>(function Yarn({ sce
         mode === 'drag' ? 'z-40 cursor-grabbing' : mode === 'rest' ? 'z-10 cursor-grab' : 'z-40'
       }`}
     >
-      {/* Hilo suelto apoyado en la repisa (solo cuando descansa) */}
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 40 40"
-        className={`pointer-events-none absolute inset-0 h-full w-full overflow-visible transition-opacity duration-300 ${mode === 'rest' ? 'opacity-100' : 'opacity-0'}`}
-      >
-        <path d="M30 34 C 40 40, 46 37, 52 39.5 C 58 41.5, 60 39, 63 40" fill="none" stroke="#c97a8e" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-
       <span
-        className={`block h-full w-full transition-transform duration-500 ease-[var(--ease-swing)] ${mode === 'drag' ? 'scale-[1.12] drop-shadow-[0_0.8cqw_0.8cqw_rgb(0_0_0/0.3)]' : 'group-hover/yarn:-translate-y-[10%]'}`}
+        className={`relative block h-full w-full transition-transform duration-500 ease-[var(--ease-swing)] ${mode === 'drag' ? 'scale-[1.12] drop-shadow-[0_0.8cqw_0.8cqw_rgb(0_0_0/0.3)]' : 'group-hover/yarn:-translate-y-[10%]'}`}
       >
-        <svg aria-hidden="true" viewBox="0 0 40 40" className="h-full w-full overflow-visible" style={{ transform: `rotate(${pos.rot}deg)`, transition }}>
-          <circle cx="20" cy="20" r="17" fill="#d88da0" className="dark:fill-[#b9768a]" />
-          <g fill="none" stroke="#b05f78" strokeWidth="1.3" strokeLinecap="round" opacity="0.75">
-            <path d="M6 14 C 14 20, 26 22, 35 13" />
-            <path d="M4.5 21 C 14 28, 28 29, 36.5 20" />
-            <path d="M8 30 C 16 33, 26 34, 32 30" />
-            <path d="M13 5 C 9 14, 10 27, 16 36" />
-            <path d="M22 3.5 C 18 14, 19 26, 26 36" />
-          </g>
-          <path d="M11 9 C 14 6.5, 18 5.5, 22 5.8" fill="none" stroke="#ffffff" strokeOpacity="0.45" strokeWidth="2" strokeLinecap="round" />
+        {/* Hilo suelto (pieza original de la bolita, solo cuando descansa): va con la bola, así al pasar el mouse se levanta todo junto */}
+        <svg
+          aria-hidden="true"
+          viewBox={YARN_VIEWBOX}
+          className={`pointer-events-none absolute inset-0 h-full w-full overflow-visible transition-opacity duration-300 dark:brightness-[0.88] ${mode === 'rest' ? 'opacity-100' : 'opacity-0'}`}
+        >
+          {YARN_THREAD}
         </svg>
-      </span>
-
-      {/* Pista manuscrita al pasar el mouse */}
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute bottom-[calc(100%+0.35rem)] left-1/2 -translate-x-1/2 translate-y-1 font-hand text-[clamp(0.95rem,3cqw,1.25rem)] leading-none whitespace-nowrap text-rose-deep opacity-0 transition-all duration-300 ${
-          mode === 'rest' ? 'group-focus-visible/yarn:translate-y-0 group-focus-visible/yarn:opacity-100 [@media(hover:hover)]:group-hover/yarn:translate-y-0 [@media(hover:hover)]:group-hover/yarn:opacity-100' : ''
-        }`}
-      >
-        ¿se la llevás al gato?
+        {/* La bola gira sobre su centro mientras rueda */}
+        <svg
+          aria-hidden="true"
+          viewBox={YARN_VIEWBOX}
+          className="h-full w-full overflow-visible dark:brightness-[0.88]"
+          style={{ transform: `rotate(${pos.rot}deg)`, transition }}
+        >
+          {YARN_BALL}
+        </svg>
       </span>
     </button>
   )

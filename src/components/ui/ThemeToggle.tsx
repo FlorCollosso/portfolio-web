@@ -1,9 +1,11 @@
 import { useTheme } from '../../hooks/useTheme'
+import { useI18n } from '../../i18n/useI18n'
 
 // Interruptor compacto del header: la misma lámpara de la escena, en miniatura.
 export function ThemeToggle() {
   const { theme, toggle } = useTheme()
   const on = theme === 'dark'
+  const { t } = useI18n()
 
   return (
     <button
@@ -13,8 +15,8 @@ export function ThemeToggle() {
         toggle({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
       }}
       aria-pressed={on}
-      aria-label={on ? 'Volver al modo día' : 'Activar el modo noche'}
-      title={on ? 'Modo día' : 'Modo noche'}
+      aria-label={on ? t('theme.toDay') : t('theme.toNight')}
+      title={on ? t('theme.day') : t('theme.night')}
       className="group grid size-11 place-items-center rounded-full transition-colors hover:bg-ink/5"
     >
       <svg viewBox="0 0 24 24" className="size-6 overflow-visible" aria-hidden="true">

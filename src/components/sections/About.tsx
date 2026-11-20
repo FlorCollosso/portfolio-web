@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/useI18n'
 import type { Profile, TimelineItem } from '../../types/portfolio'
 import { Handnote } from '../ui/Handnote'
 import { Reveal } from '../ui/Reveal'
@@ -11,13 +12,14 @@ interface AboutProps {
 }
 
 export function About({ profile, languages, studying }: AboutProps) {
+  const { t } = useI18n()
   const [first, ...rest] = profile.about
   // La segunda oración del primer párrafo funciona como cita destacada.
   const [intro, ...quoteParts] = first.split('. ')
   const quote = quoteParts.join('. ')
 
   return (
-    <Section id="sobre-mi" number="01" eyebrow="Sobre mí" title={<>Del diseño gráfico <em>al código</em></>}>
+    <Section id="sobre-mi" number="01" eyebrow={t('about.eyebrow')} title={<>{t('about.titleA')} <em>{t('about.titleB')}</em></>}>
       <div className="grid gap-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
         {/* Polaroid con cinta */}
         <Reveal className="relative mx-auto w-full max-w-sm lg:mx-0">
@@ -26,8 +28,8 @@ export function About({ profile, languages, studying }: AboutProps) {
             <ResponsiveImage image={profile.photo} sizes="(min-width: 1024px) 24rem, 80vw" className="aspect-4/5 w-full object-cover saturate-[0.92]" />
             <p className="absolute right-0 bottom-3 left-0 text-center font-hand text-2xl text-ink-soft">Flor · {profile.location.split(',')[0]}</p>
           </div>
-          <Handnote arrow="up" className="mt-6 ml-6" tilt={2}>
-            sí, el saco celeste combina con la paleta
+          <Handnote arrow="hook-up" className="mt-7 ml-3 text-lg sm:ml-6 sm:text-xl" tilt={2}>
+            {t('about.photoNote')}
           </Handnote>
         </Reveal>
 
@@ -55,14 +57,14 @@ export function About({ profile, languages, studying }: AboutProps) {
             <dl className="relative rotate-[0.6deg] overflow-hidden rounded-[0.35rem] border border-line bg-card px-6 pt-10 pb-6 shadow-[0.4rem_0.4rem_0_var(--color-teal-soft)] [background-image:repeating-linear-gradient(transparent_0_2.45rem,var(--color-line)_2.45rem_2.5rem)] [background-position:0_2.2rem] sm:px-8">
               <span aria-hidden="true" className="absolute inset-x-0 top-7 h-px bg-rose/70" />
               <p aria-hidden="true" className="absolute top-2 left-6 font-serif text-xs tracking-[0.2em] text-muted uppercase sm:left-8">
-                Ficha N.º 001 · Collosso, F.
+                {t('about.card')}
               </p>
               <span aria-hidden="true" className="absolute top-3 right-5 size-3 rounded-full border border-line bg-paper" />
               {[
-                ['Base', profile.location],
-                ['Enfoque', 'UX/UI, diseño de interfaces y desarrollo frontend'],
-                ['Estudiando', studying ? `${studying.title}, ${studying.organization}` : undefined],
-                ['Idiomas', languages.join(' · ')],
+                [t('about.base'), profile.location],
+                [t('about.focus'), t('about.focusValue')],
+                [t('about.studying'), studying ? `${studying.title}, ${studying.organization}` : undefined],
+                [t('about.languages'), languages.join(' · ')],
               ]
                 .filter(([, value]) => value)
                 .map(([term, value]) => (

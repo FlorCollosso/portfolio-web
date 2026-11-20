@@ -65,6 +65,8 @@ export interface TimelineItem {
   organization: string
   period: string
   location?: string
+  /** Formación en curso (se muestra en la ficha de "Sobre mí") */
+  ongoing?: boolean
   bullets?: string[]
   tags?: string[]
 }

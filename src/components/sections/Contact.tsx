@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FiArrowUpRight, FiCheck, FiCopy, FiDownload } from 'react-icons/fi'
 import type { Profile } from '../../types/portfolio'
+import { useI18n } from '../../i18n/useI18n'
 import { asset } from '../../utils/asset'
 import { CatFace } from '../scene/CatFace'
 import { buttonBase } from '../ui/ButtonLink'
@@ -11,6 +12,7 @@ const YEAR = new Date().getFullYear()
 
 // Contacto como postal: mensaje a la izquierda, dirección y estampilla a la derecha.
 export function Contact({ profile }: { profile: Profile }) {
+  const { t } = useI18n()
   const [copied, setCopied] = useState(false)
 
   const copyEmail = async () => {
@@ -28,7 +30,7 @@ export function Contact({ profile }: { profile: Profile }) {
       <div className="mx-auto max-w-6xl">
         <p className="flex items-baseline gap-3 font-serif text-sm text-muted">
           <span className="text-5xl leading-none font-light text-rose-deep italic md:text-6xl">05</span>
-          <span className="tracking-wide">Contacto</span>
+          <span className="tracking-wide">{t('contact.eyebrow')}</span>
         </p>
 
         <Reveal className="mt-10">
@@ -41,10 +43,10 @@ export function Contact({ profile }: { profile: Profile }) {
             <div className="grid gap-10 p-7 sm:p-12 md:grid-cols-[1.2fr_1px_1fr] md:gap-12">
               <div>
                 <h2 id="contacto-title" className="font-serif text-4xl leading-[1.04] font-light tracking-[-0.02em] text-balance sm:text-5xl md:text-6xl">
-                  ¿Tenés un proyecto o una búsqueda abierta? <em className="font-normal text-rose-deep">Hablemos.</em>
+                  {t('contact.titleA')} <em className="font-normal text-rose-deep">{t('contact.titleB')}</em>
                 </h2>
-                <p className="mt-6 max-w-md text-lg text-muted">Escribime por mail o por LinkedIn, y si querés, llevate mi CV.</p>
-                <p className="mt-8 font-hand text-3xl text-teal-deep -rotate-2">con cariño, Flor</p>
+                <p className="mt-6 max-w-md text-lg text-muted">{t('contact.text')}</p>
+                <p className="mt-8 font-hand text-3xl text-teal-deep -rotate-2">{t('contact.sign')}</p>
               </div>
 
               <span aria-hidden="true" className="hidden bg-line md:block" />
@@ -66,7 +68,7 @@ export function Contact({ profile }: { profile: Profile }) {
                   </div>
                 </div>
 
-                <p className="font-serif text-sm text-muted italic">Para: vos</p>
+                <p className="font-serif text-sm text-muted italic">{t('contact.to')}</p>
                 <ul className="mt-14 space-y-1">
                   <li className="border-b border-line pb-3">
                     <a href={`mailto:${profile.email}`} className="group/link inline-flex items-center gap-2 text-lg font-medium break-all hover:text-rose-deep sm:text-xl">
@@ -85,7 +87,7 @@ export function Contact({ profile }: { profile: Profile }) {
                         <SocialIcon id={social.id} className="size-4" />
                         {social.label}
                         <FiArrowUpRight aria-hidden="true" className="opacity-0 transition-opacity group-hover/link:opacity-100" />
-                        <span className="sr-only">(se abre en una pestaña nueva)</span>
+                        <span className="sr-only">{t('common.newTab')}</span>
                       </a>
                     </li>
                   ))}
@@ -94,13 +96,13 @@ export function Contact({ profile }: { profile: Profile }) {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <button type="button" onClick={copyEmail} className={`${buttonBase} bg-ink text-paper hover:bg-rose-deep`}>
                     {copied ? <FiCheck aria-hidden="true" /> : <FiCopy aria-hidden="true" />}
-                    {copied ? 'Copiado' : 'Copiar mail'}
+                    {copied ? t('contact.copied') : t('contact.copy')}
                   </button>
                   <a href={asset(profile.cvUrl)} download className={`${buttonBase} border border-ink/20 bg-card hover:border-ink`}>
-                    <FiDownload aria-hidden="true" /> Descargar CV
+                    <FiDownload aria-hidden="true" /> {t('contact.cv')}
                   </a>
                   <span role="status" className="sr-only">
-                    {copied ? 'Mail copiado al portapapeles' : ''}
+                    {copied ? t('contact.copiedStatus') : ''}
                   </span>
                 </div>
               </div>

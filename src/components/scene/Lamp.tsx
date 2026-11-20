@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type MouseEvent } from 'react'
 import { useTheme } from '../../hooks/useTheme'
+import { useI18n } from '../../i18n/useI18n'
 
 interface LampProps {
   style?: CSSProperties
@@ -10,6 +11,7 @@ interface LampProps {
 // Lo visual (luz, halo) depende del CSS de data-theme, así la transición circular
 // captura el estado final sin esperar a React.
 export function Lamp({ style, onUse }: LampProps) {
+  const { t } = useI18n()
   const { theme, toggle } = useTheme()
   const [pulling, setPulling] = useState(false)
   const on = theme === 'dark'
@@ -27,8 +29,8 @@ export function Lamp({ style, onUse }: LampProps) {
       type="button"
       onClick={handleClick}
       aria-pressed={on}
-      aria-label={on ? 'Apagar la lámpara y volver al modo día' : 'Encender la lámpara: modo noche'}
-      title={on ? 'Apagar la lámpara' : 'Encender la lámpara'}
+      aria-label={on ? t('scene.lampOff') : t('scene.lampOn')}
+      title={on ? t('scene.lampOffTitle') : t('scene.lampOnTitle')}
       style={style}
       className="lamp-button group/lamp absolute cursor-pointer pointer-events-auto rounded-b-[40%] focus-visible:outline-offset-4"
     >

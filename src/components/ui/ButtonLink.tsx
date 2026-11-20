@@ -1,4 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
+import { useI18n } from '../../i18n/useI18n'
 
 type Variant = 'primary' | 'secondary' | 'ghost'
 
@@ -18,6 +19,7 @@ export const buttonBase =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ease-[var(--ease-soft)] active:translate-y-0'
 
 export function ButtonLink({ variant = 'primary', icon, external, className = '', children, ...props }: ButtonLinkProps) {
+  const { t } = useI18n()
   return (
     <a
       {...props}
@@ -26,7 +28,7 @@ export function ButtonLink({ variant = 'primary', icon, external, className = ''
     >
       {icon}
       <span>{children}</span>
-      {external && <span className="sr-only">(se abre en una pestaña nueva)</span>}
+      {external && <span className="sr-only">{t('common.newTab')}</span>}
     </a>
   )
 }

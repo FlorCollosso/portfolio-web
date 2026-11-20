@@ -4,12 +4,14 @@ import { useFinePointer, useReducedMotion } from '../../hooks/useMediaQuery'
 import type { PetPortrait, Profile, Project, SecretNote as SecretNoteData } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
 import { Cat } from './Cat'
-import { LampHint, Mug, Plant, SceneWindow, Vase } from './Decor'
+import { HangingPlant, LampHint, Plant, SceneWindow, Vase } from './Decor'
+import { GameConsole } from './GameConsole'
 import { Lamp } from './Lamp'
 import { PetFrame } from './PetFrame'
 import { Book, Frame, SceneLabel, type AttentionHandlers } from './ProjectObjects'
 import { SecretNote } from './SecretNote'
 import { Yarn } from './Yarn'
+import { useI18n } from '../../i18n/useI18n'
 
 interface LibrarySceneProps {
   projects: Project[]
@@ -35,6 +37,7 @@ const LAMP_PIVOT = `${(LAMP_X / SCENE.width) * 100}% 0%`
 
 // El estudio: pared, ventana, repisas, libros-proyecto, cuadros, el gato y la lámpara.
 export function LibraryScene({ projects, profile, note, pets, onOpenProject }: LibrarySceneProps) {
+  const { t } = useI18n()
   const sceneRef = useRef<HTMLDivElement>(null)
   // La "cámara": todo lo que está dentro se mueve junto, como una sola pieza
   const stageRef = useRef<HTMLDivElement>(null)
@@ -86,10 +89,10 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
     <div
       ref={sceneRef}
       role="group"
-      aria-label="Mi estudio: cada libro con título y cada cuadro de la pared es un proyecto"
+      aria-label={t('scene.label')}
       onPointerMove={onPointerMove}
       onPointerLeave={resetView}
-      className="library-scene relative aspect-[640/660] w-full overflow-hidden bg-wall [container-type:inline-size] [border-radius:50%_50%_1.6rem_1.6rem/18%_18%_1.6rem_1.6rem] shadow-[inset_0_0_0_1px_var(--color-line),0_2.5rem_4rem_-2.5rem_rgb(20_20_20/0.35)] transition-colors duration-700"
+      className="library-scene relative aspect-[6721/7134] w-full overflow-hidden bg-wall [container-type:inline-size] [border-radius:50%_50%_1.6rem_1.6rem/18%_18%_1.6rem_1.6rem] shadow-[inset_0_0_0_1px_var(--color-line),0_2.5rem_4rem_-2.5rem_rgb(20_20_20/0.35)] transition-colors duration-700"
     >
       {/* Escenario: pared, luz, repisas y objetos quedan fijos entre sí. Al mover el mouse se mueve
           la vista entera (.scene-stage), como mirar por una ventana desde otro ángulo. */}
@@ -102,9 +105,10 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
         />
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[16%] bg-linear-to-t from-ink/8 to-transparent" />
 
-        {/* Contenido de la escena (600 unidades de ancho), con un margen de pared a cada lado
-            para que los carteles de los objetos cercanos al borde tengan lugar */}
-        <div ref={contentRef} className="absolute inset-y-0 right-[3.125%] left-[3.125%] [container-type:inline-size]">
+        {/* Contenido de la escena (600 × 660 unidades). Alrededor queda pared libre: ya contando el zoom de la
+            cámara (.scene-stage, ×1.055), entre lo más saliente (la planta a la izquierda, la repisa a la derecha,
+            sus patas abajo) y el borde se ve una bolita de lana de aire; arriba se suma una bolita sobre la ventana */}
+        <div ref={contentRef} className="absolute top-[4.486%] right-[3.499%] bottom-[3%] left-[7.234%] [container-type:inline-size]">
 
           {/* Luz de la lámpara (solo de noche).
               a) Halo sobre la pared: luz ambiente, quieta. Es una elipse que se apaga del todo antes del borde
@@ -149,6 +153,8 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
           {/* Capa del fondo: ventana */}
           <div className="pointer-events-none absolute inset-0">
             <SceneWindow style={box(42, 50, 108, 168)} />
+            {/* Planta colgante sobre la repisa de la ventana: las guías caen por la izquierda */}
+            <HangingPlant style={box(36 - 30.9 * 0.73, 204.6 - (39.33 + 58.4) * 0.73, 90.36 * 0.73, 216.35 * 0.73)} />
           </div>
 
           {/* Capa principal: repisas y todo lo que se puede tocar */}
@@ -165,7 +171,7 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
             {books.map((slot, i) => (
               <Book key={slot.x} slot={slot} project={byId(slot.projectId)} baseY={shelfTop} order={i} onOpen={onOpenProject} {...attention} />
             ))}
-            <Vase style={box(300, shelfTop - 78, 36, 78)} />
+            <Vase style={box(318, shelfTop - 110.3, 39.6, 111.5)} />
             <Book slot={lyingBooks[0]} lying baseY={shelfTop} order={8} />
             <Book slot={lyingBooks[1]} project={byId(lyingBooks[1].projectId)} lying baseY={shelfTop - lyingBooks[0].h} order={9} onOpen={onOpenProject} {...attention} />
             <Shelf y={shelfTop} />
@@ -176,7 +182,8 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
               playEl={yarnEl}
               playing={catPlaying}
               batKey={batKey}
-              style={box(438, shelfTop - lyingBooks[0].h - lyingBooks[1].h - 122, 130, 122)}
+              // La base del cuerpo (y = 351 de 362 en la ilustración) se hunde una unidad en el libro: bien sentado, sin espacio
+              style={box(436.2, shelfTop - lyingBooks[0].h - lyingBooks[1].h + 1 - 136.5 * (351 / 362), 124.7, 136.5)}
               className="z-10 [animation:peek-in_1.1s_var(--ease-soft)_1.1s_backwards]"
             />
 
@@ -195,11 +202,12 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
                 )
               )
             })}
-            <Mug style={box(344, shelfBottom - 82, 46, 82)} />
+            <Plant style={box(0.9, shelfBottom - 146.5, 131.1, 148.2)} />
+            <GameConsole style={box(348, shelfBottom - 64, 42, 64)} reduced={reduced} {...attention} />
             <a
               href={asset(profile.cvUrl)}
               download
-              aria-label="Descargar mi CV en PDF"
+              aria-label={t('scene.cvAria')}
               style={box(408, shelfBottom - 34, 140, 34)}
               {...attention}
               className="group absolute pointer-events-auto [animation:scene-in_0.8s_var(--ease-soft)_0.8s_backwards] hover:z-20 focus-visible:z-20"
@@ -208,15 +216,10 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
                 <span className="absolute inset-y-0 right-[16%] w-[3%] bg-ink/70" />
                 <span className="ml-[10%] rounded-[2px] bg-[#fbf6ea] px-[4%] font-hand text-[3cqw] leading-none text-ink-soft dark:text-[#2c2c2c]">CV · PDF</span>
               </span>
-              <SceneLabel title="Mi CV" detail="Descargar en PDF" at={408 + 70} />
+              <SceneLabel title={t('scene.cvTitle')} detail={t('scene.cvDetail')} at={408 + 70} />
             </a>
             <Shelf y={shelfBottom} />
             <Yarn ref={setYarnEl} sceneRef={contentRef} reduced={reduced} onNear={setCatPlaying} onBat={() => setBatKey((k) => k + 1)} />
-          </div>
-
-          {/* Capa delantera: la planta, que tapa un poco el borde */}
-          <div className="pointer-events-none absolute inset-0">
-            <Plant style={box(28, shelfBottom - 126, 92, 194)} />
           </div>
 
           <div className="pointer-events-none absolute inset-0">

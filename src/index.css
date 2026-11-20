@@ -324,13 +324,41 @@
   }
 }
 
+/* Más sutil que antes: la cola acompaña, los bigotes expresan */
 @keyframes tail-play {
   0%,
   100% {
-    transform: rotate(4deg);
+    transform: rotate(2deg);
   }
   50% {
-    transform: rotate(-16deg);
+    transform: rotate(-7deg);
+  }
+}
+
+/* Bigotes: dos sacudiditas rápidas desde la cara */
+@keyframes whisker-twitch {
+  0%,
+  28%,
+  56%,
+  100% {
+    transform: rotate(0deg);
+  }
+  14%,
+  42% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes whisker-twitch-r {
+  0%,
+  28%,
+  56%,
+  100% {
+    transform: rotate(0deg);
+  }
+  14%,
+  42% {
+    transform: rotate(-5deg);
   }
 }
 
@@ -436,10 +464,10 @@ dialog[data-closing]::backdrop {
     transform: rotate(0deg);
   }
   35% {
-    transform: translate(-4px, -36px) rotate(56deg);
+    transform: translate(-8px, -50px) rotate(118deg);
   }
   55% {
-    transform: translate(-2px, -30px) rotate(42deg);
+    transform: translate(-6px, -40px) rotate(105deg);
   }
   100% {
     transform: rotate(0deg);
@@ -502,5 +530,901 @@ dialog[data-closing]::backdrop {
   100% {
     opacity: 0;
     transform: translate(30px, -80px) scale(1.1);
+  }
+}
+
+/* Hojas de las plantas: se mecen apenas desde su tallo */
+.decor-sway {
+  animation: decor-sway 8s ease-in-out infinite alternate;
+}
+
+@keyframes decor-sway {
+  from {
+    transform: rotate(-2deg);
+  }
+  to {
+    transform: rotate(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decor-sway {
+    animation: none;
+  }
+}
+
+/* Consolita: luz de encendido, corazón que late, gatito que parpadea y la partida */
+@keyframes console-led {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.console-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes console-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes console-blink-open {
+  0%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes console-blink-closed {
+  0%,
+  92% {
+    opacity: 0;
+  }
+  93%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Hojas que reaccionan al pasar el mouse: vaivén corto desde su base, cada una con su amplitud y demora */
+.decor-leaf {
+  pointer-events: visiblePainted;
+}
+
+.decor-leaf.is-rustling {
+  animation: leaf-rustle 1.1s var(--ease-soft) var(--leaf-delay, 0ms);
+}
+
+@keyframes leaf-rustle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  22% {
+    transform: rotate(calc(var(--leaf-amp, 4) * 1deg));
+  }
+  48% {
+    transform: rotate(calc(var(--leaf-amp, 4) * -0.6deg));
+  }
+  72% {
+    transform: rotate(calc(var(--leaf-amp, 4) * 0.25deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decor-leaf.is-rustling {
+    animation: none;
+  }
+}
+
+/* ————— NAMI.EXE: la ventana-consola del minijuego ————— */
+/* ————— Consola de NAMI.EXE —————
+   Un solo objeto con proporción fija (la versión alargada) que escala entero según el espacio:
+   --mq-w es el ancho más grande que entra a lo ancho y a lo alto del viewport; el alto sale de la proporción.
+   Todo lo de la consola se mide en em (1em = 1/36 del ancho), así cuerpo, pantalla y botones escalan juntos.
+   El contenido de la pantalla se mide en cqw (ancho de la pantalla) y nunca cambia el tamaño de afuera. */
+.mq-dialog {
+  --mq-ratio: 36 / 51;
+  --mq-w: min(calc(100vw - 0.75rem), 36rem, calc((100dvh - 1rem) * 36 / 51));
+  width: var(--mq-w);
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.mq-console {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  aspect-ratio: var(--mq-ratio);
+  border-radius: 1.4em 1.4em 2.8em 1.4em;
+  background: linear-gradient(#f2d1d6, #e9bcc5);
+  padding: 0.8em 1em 1.1em;
+  font-size: calc(var(--mq-w) / 36);
+  color: #5a3d45;
+  box-shadow:
+    inset 0 0.12em 0 rgb(255 255 255 / 0.55),
+    inset -0.4em 0 0 #e0b0b8,
+    0 2em 4em -1em rgb(0 0 0 / 0.6);
+}
+
+.mq-console-in {
+  animation: mq-in 0.45s var(--ease-soft) both;
+}
+
+@keyframes mq-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.96);
+  }
+}
+
+.mq-led {
+  animation: console-led 2.6s ease-in-out infinite;
+}
+
+/* Encabezado: luz, nombre y botones */
+.mq-head {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+  min-width: 0;
+  padding: 0 0.25em 0.5em;
+}
+.mq-led-dot {
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 999px;
+  background: #f2abbc;
+  box-shadow: 0 0 0.5em #f2abbc;
+}
+.mq-head .mq-label {
+  min-width: 0;
+  margin: 0 auto 0 0.25em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mq-label {
+  font:
+    600 0.72em/1.2 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a5a66;
+}
+
+.mq-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25em;
+  height: 2.25em;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.4);
+  color: #6b3d4a;
+  font-size: 1.05em;
+  transition: background-color 150ms;
+}
+.mq-icon:hover {
+  background: rgb(255 255 255 / 0.7);
+}
+
+.mq-bezel {
+  display: flex;
+  min-height: 0;
+  border-radius: 0.8em 0.8em 1.8em 0.8em;
+  background: #5a5560;
+  padding: 1.5em 1.85em;
+  box-shadow: inset 0 0.25em 0.5em rgb(0 0 0 / 0.35);
+}
+
+/* Pantalla: su tamaño lo da la consola; todo lo de adentro se superpone sin empujar */
+.mq-screen {
+  /* Escala de espaciado del contenido, relativa al ancho de la pantalla */
+  --sp-1: 1.1cqw;
+  --sp-2: 2cqw;
+  --sp-3: 3cqw;
+  --sp-4: 4.6cqw;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #1b1d2e;
+  container-type: size;
+  outline: none;
+}
+.mq-screen:focus-visible {
+  box-shadow: 0 0 0 2px #f2abbc;
+}
+
+/* El juego es 4:3 y va arriba; debajo queda la guía rápida */
+.mq-canvas {
+  position: absolute;
+  inset: 0 0 auto;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+
+.mq-big {
+  font-size: 7cqw;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #f1d1d1;
+  text-shadow: 0.6cqw 0.6cqw 0 #93354f;
+}
+
+/* ————— Pantallas informativas (inicio y pausa) —————
+   Ocupan toda la pantalla sin cambiar su tamaño. En el inicio, el canvas de fondo muestra el título y a Nami. */
+.mq-info {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #fff8e6;
+}
+.mq-info-head {
+  flex: none;
+  height: 30cqw;
+}
+.mq-info-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 0;
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+}
+.mq-info-title .mq-info-body {
+  background: linear-gradient(rgb(18 16 30 / 0.5), rgb(18 16 30 / 0.94) var(--sp-4));
+}
+.mq-info-pause {
+  background: rgb(18 16 30 / 0.9);
+}
+.mq-info-pause .mq-info-body {
+  gap: var(--sp-3);
+}
+.mq-pause-title {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mq-info b,
+.mq-strip b {
+  color: #ffd27a;
+}
+.mq-info kbd,
+.mq-strip kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  border-radius: 0.2em;
+  background: rgb(255 255 255 / 0.14);
+  padding: 0.05em 0.35em;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  color: #fff8e6;
+  box-shadow: 0 0.15em 0 rgb(255 255 255 / 0.25);
+}
+
+/* Zona 2: objetivo */
+.mq-goal {
+  width: 100%;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 0.8cqw;
+  background: rgb(255 255 255 / 0.06);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: 3.3cqw;
+  line-height: 1.4;
+  text-align: center;
+  text-wrap: balance;
+}
+.mq-goal-soft {
+  font-size: 3.1cqw;
+  color: #f1d1d1;
+}
+
+/* Zona 3: acciones (nombre + cómo se resuelve) */
+.mq-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+  width: 100%;
+}
+/* Tarjeta base del sistema (acciones, estadísticas, causa del final) */
+.mq-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6cqw;
+  border-radius: 0.6cqw;
+  background: rgb(255 255 255 / 0.05);
+  padding: 1.5cqw var(--sp-3);
+  font-size: 3.15cqw;
+  line-height: 1.3;
+  text-align: left;
+}
+.mq-card-label {
+  font-size: 2.5cqw;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f2abbc;
+}
+.mq-action {
+  border-left: 0.7cqw solid var(--accent);
+}
+.mq-action-name {
+  font-weight: 700;
+  color: var(--accent);
+}
+.mq-action-how {
+  color: #d7ebea;
+}
+
+/* Zona 4: botón principal */
+.mq-btn-main {
+  margin-block: var(--sp-1);
+  padding: 1.8cqw 8cqw;
+  font-size: 4.1cqw;
+}
+
+/* Zona 5: controles y récord */
+.mq-info-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  border-top: 1px dashed rgb(255 255 255 / 0.18);
+  padding-top: var(--sp-2);
+}
+.mq-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-1) var(--sp-3);
+  font-size: 2.85cqw;
+  line-height: 1.45;
+  color: #d7ebea;
+}
+.mq-controls li {
+  white-space: nowrap;
+}
+.mq-controls span {
+  margin-right: 0.2em;
+  font-weight: 700;
+  color: #ffd27a;
+}
+@media (hover: hover) {
+  .mq-controls-touch {
+    display: none;
+  }
+}
+@media (hover: none) {
+  .mq-controls-keys {
+    display: none;
+  }
+}
+.mq-record {
+  border-radius: 999px;
+  background: rgb(255 210 122 / 0.12);
+  padding: 0.2em 0.9em;
+  font-size: 2.9cqw;
+  font-weight: 700;
+  color: #ffd27a;
+}
+
+/* Guía rápida debajo del juego: aprovecha la parte de la pantalla que el 4:3 no usa */
+.mq-strip {
+  position: absolute;
+  inset: 75cqw 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2.2cqw;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  background: #15141f;
+  padding: 2cqw 4.6cqw;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #fff8e6;
+}
+.mq-strip .mq-actions {
+  gap: 1.6cqw;
+}
+.mq-strip .mq-action {
+  padding: 1.2cqw 2.6cqw;
+  font-size: 2.75cqw;
+}
+.mq-strip .mq-controls {
+  font-size: 2.55cqw;
+}
+
+/* ————— Resultado (game over / récord) —————
+   Mismo sistema que inicio y pausa: tarjetas, escala de espaciado y colores. El puntaje manda. */
+.mq-info-over {
+  background: rgb(18 16 30 / 0.9);
+}
+.mq-over-body {
+  gap: var(--sp-2);
+}
+/* Aire extra alrededor del puntaje, que es lo más importante */
+.mq-over-body .mq-result {
+  margin-bottom: var(--sp-1);
+}
+.mq-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4cqw;
+}
+.mq-result-status {
+  font-size: 3.6cqw;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f1d1d1;
+}
+.is-record .mq-result-status {
+  color: #ffd27a;
+}
+.mq-score-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqw;
+}
+/* Puntaje con la fuente de píxeles del título */
+.mq-score-px {
+  display: block;
+  height: 11cqw;
+  width: auto;
+  image-rendering: pixelated;
+}
+.mq-result-best {
+  font-size: 2.7cqw;
+  font-weight: 700;
+  color: #ffd27a;
+  opacity: 0.85;
+}
+/* Nuevo récord: destellos que titilan y un saltito del puntaje, una sola vez */
+.mq-spark {
+  width: 4.2cqw;
+  height: auto;
+  image-rendering: pixelated;
+  animation: mq-twinkle 1.1s steps(2) infinite;
+}
+.mq-spark-r {
+  margin-top: -6cqw;
+  animation-delay: 0.55s;
+}
+.mq-spark-l {
+  margin-top: 5cqw;
+}
+.is-record .mq-score-px {
+  animation: mq-pop 0.5s steps(4) both;
+}
+@keyframes mq-twinkle {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+}
+@keyframes mq-pop {
+  from {
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+}
+
+/* Desglose en tarjetas: etiqueta + valor */
+.mq-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+  width: 100%;
+}
+.mq-stat {
+  align-items: center;
+  gap: 0.4cqw;
+  padding-block: 1.3cqw;
+  text-align: center;
+}
+.mq-stat-value {
+  font-size: 4.3cqw;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff8e6;
+}
+
+.mq-cause {
+  width: 100%;
+  font-size: 2.95cqw;
+  color: #d7ebea;
+}
+.mq-cause .mq-card-label {
+  color: #ffd27a;
+}
+
+/* Comentario de Nami: su carita + un globito */
+.mq-nami-says {
+  display: flex;
+  align-items: center;
+  gap: 2.4cqw;
+  width: 100%;
+}
+.mq-nami-icon {
+  flex: none;
+  width: 8cqw;
+  height: auto;
+  image-rendering: pixelated;
+}
+.mq-bubble {
+  position: relative;
+  flex: 1;
+  border-radius: 1.2cqw;
+  background: #f1d1d1;
+  padding: 1.6cqw 2.6cqw;
+  font-size: 3cqw;
+  font-style: italic;
+  line-height: 1.35;
+  color: #2a1c1e;
+  text-wrap: balance;
+}
+.mq-bubble::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -1.4cqw;
+  border: 1.4cqw solid transparent;
+  border-right-color: #f1d1d1;
+  border-left: 0;
+  translate: 0 -50%;
+}
+
+/* Acciones: la principal arriba, las secundarias debajo y más livianas */
+.mq-end-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  margin-top: var(--sp-1);
+}
+.mq-end-actions .mq-btn-main {
+  margin-block: 0;
+}
+.mq-end-secondary {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-2);
+  max-width: 100%;
+}
+
+/* Confirmación chica para dejar la ronda (sobre la pausa) */
+.mq-confirm {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(10 9 18 / 0.72);
+  padding: var(--sp-4);
+}
+.mq-confirm-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  width: min(100%, 78cqw);
+  border-radius: 1cqw;
+  background: #241f33;
+  padding: var(--sp-4) var(--sp-3);
+  text-align: center;
+  box-shadow:
+    0 0 0 0.6cqw #2a1c1e,
+    0 0 0 1.2cqw #f2abbc,
+    0 2cqw 0 1.2cqw rgb(0 0 0 / 0.35);
+}
+.mq-confirm-title {
+  font-size: 4cqw;
+  font-weight: 800;
+  color: #f1d1d1;
+}
+.mq-confirm-text {
+  font-size: 3.1cqw;
+  color: #d7ebea;
+}
+.mq-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+/* Botones secundarios: más chicos; "ghost" para las acciones de navegación */
+.mq-btn-sm {
+  margin-top: 0;
+  padding: 1cqw 2.6cqw;
+  font-size: 2.7cqw;
+  white-space: nowrap;
+}
+.mq-btn.mq-btn-ghost {
+  background: transparent;
+  color: #f1d1d1;
+  box-shadow: inset 0 0 0 0.5cqw rgb(241 209 209 / 0.55);
+}
+.mq-btn.mq-btn-ghost:hover {
+  background: rgb(241 209 209 / 0.12);
+}
+
+.mq-btn {
+  margin-top: 0.8cqw;
+  padding: 1.4cqw 4.5cqw;
+  background: #d88da0;
+  color: #2a1c1e;
+  font: 800 3.8cqw ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 0.6cqw #2a1c1e,
+    0 1.2cqw 0 0.6cqw #2a1c1e,
+    inset 0 -0.8cqw 0 #b56a7e,
+    inset 0 0.6cqw 0 #f1d1d1;
+  transition:
+    transform 80ms,
+    filter 150ms;
+}
+.mq-btn:hover {
+  filter: brightness(1.06);
+}
+.mq-btn:active {
+  transform: translateY(0.6cqw);
+}
+.mq-btn:focus-visible {
+  outline: 0.6cqw solid #fff8e6;
+  outline-offset: 1.2cqw;
+}
+.mq-btn-alt {
+  background: #80bdbb;
+  box-shadow:
+    0 0 0 0.6cqw #2a1c1e,
+    0 1.2cqw 0 0.6cqw #2a1c1e,
+    inset 0 -0.8cqw 0 #4f8f8d,
+    inset 0 0.6cqw 0 #d7ebea;
+}
+
+/* Botonera: cruceta, RESET/START y A/B (también son los controles táctiles) */
+.mq-pad {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9em 0.3em 0;
+}
+.mq-pad button {
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mq-dpad {
+  display: grid;
+  grid-template-rows: repeat(3, 2.7em);
+  grid-template-columns: repeat(3, 2.7em);
+  grid-template-areas:
+    '. up .'
+    'left mid right'
+    '. down .';
+}
+.mq-dpad-btn,
+.mq-dpad-mid {
+  display: grid;
+  place-items: center;
+  background: #5a5560;
+  color: #ecc5cb;
+  font-size: 0.8em;
+}
+.mq-dpad-up {
+  grid-area: up;
+  border-radius: 0.35em 0.35em 0 0;
+}
+.mq-dpad-down {
+  grid-area: down;
+  border-radius: 0 0 0.35em 0.35em;
+}
+.mq-dpad-left {
+  grid-area: left;
+  border-radius: 0.35em 0 0 0.35em;
+}
+.mq-dpad-right {
+  grid-area: right;
+  border-radius: 0 0.35em 0.35em 0;
+}
+.mq-dpad-mid {
+  grid-area: mid;
+}
+.mq-dpad-btn:active {
+  background: #47434d;
+}
+
+/* RESET al lado de START: mismo botón alargado, un tono más oscuro */
+.mq-sys {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35em;
+}
+.mq-sys-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375em;
+}
+.mq-pill {
+  display: grid;
+  place-items: center;
+  width: 2.6em;
+  height: 1.8em;
+}
+.mq-pill span {
+  width: 2.1em;
+  height: 0.7em;
+  border-radius: 999px;
+  background: #b98a92;
+  rotate: -22deg;
+  box-shadow: 0 0.15em 0 #a07780;
+}
+.mq-pill:active span {
+  translate: 0 0.12em;
+  box-shadow: none;
+}
+.mq-pill:focus-visible {
+  outline: 2px solid #93354f;
+  outline-offset: 2px;
+  border-radius: 0.4em;
+}
+.mq-pill-reset span {
+  background: #a87882;
+  box-shadow: 0 0.15em 0 #8a5f69;
+}
+.mq-sys-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  font-size: 0.6em;
+  white-space: nowrap;
+}
+.mq-sys-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.mq-ab {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-right: 0.2em;
+  rotate: -18deg;
+}
+.mq-b {
+  display: grid;
+  place-items: center;
+  width: 3.3em;
+  height: 3.3em;
+  margin-top: 1.6em;
+  border-radius: 999px;
+  background: #b98a92;
+  color: #fff4f6;
+  font: 800 1em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  box-shadow:
+    inset 0 0.2em 0 rgb(255 255 255 / 0.3),
+    0 0.3em 0 #8a5a66;
+}
+.mq-b:active {
+  translate: 0 0.2em;
+  box-shadow: inset 0 0.2em 0 rgb(255 255 255 / 0.3);
+}
+.mq-a {
+  display: grid;
+  place-items: center;
+  width: 3.6em;
+  height: 3.6em;
+  border-radius: 999px;
+  background: #c56478;
+  color: #fff4f6;
+  font: 800 1.1em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  box-shadow:
+    inset 0 0.2em 0 rgb(255 255 255 / 0.3),
+    0 0.3em 0 #93354f;
+}
+.mq-a:active {
+  translate: 0 0.2em;
+  box-shadow: inset 0 0.2em 0 rgb(255 255 255 / 0.3);
+}
+
+.mq-pad button:focus-visible,
+.mq-icon:focus-visible {
+  outline: 2px solid #93354f;
+  outline-offset: 2px;
+}
+
+/* Encendido de la consolita de la biblioteca antes de abrir el juego */
+@keyframes console-boot-flash {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+@keyframes console-boot-line {
+  0% {
+    transform: scale(0, 1);
+  }
+  35% {
+    transform: scale(1, 1);
+  }
+  70% {
+    transform: scale(1, 6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1, 12);
+    opacity: 0;
+  }
+}
+@keyframes console-boot-star {
+  0%,
+  45% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mq-console-in,
+  .mq-led,
+  .mq-spark,
+  .is-record .mq-score-px {
+    animation: none;
   }
 }

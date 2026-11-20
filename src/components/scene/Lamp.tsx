@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type MouseEvent } from 'react'
 import { useTheme } from '../../hooks/useTheme'
+import { useI18n } from '../../i18n/useI18n'
 
 interface LampProps {
   style?: CSSProperties
@@ -10,6 +11,7 @@ interface LampProps {
 // Lo visual (luz, halo) depende del CSS de data-theme, así la transición circular
 // captura el estado final sin esperar a React.
 export function Lamp({ style, onUse }: LampProps) {
+  const { t } = useI18n()
   const { theme, toggle } = useTheme()
   const [pulling, setPulling] = useState(false)
   const on = theme === 'dark'
@@ -27,10 +29,10 @@ export function Lamp({ style, onUse }: LampProps) {
       type="button"
       onClick={handleClick}
       aria-pressed={on}
-      aria-label={on ? 'Apagar la lámpara y volver al modo día' : 'Encender la lámpara: modo noche'}
-      title={on ? 'Apagar la lámpara' : 'Encender la lámpara'}
+      aria-label={on ? t('scene.lampOff') : t('scene.lampOn')}
+      title={on ? t('scene.lampOffTitle') : t('scene.lampOnTitle')}
       style={style}
-      className="group/lamp absolute cursor-pointer pointer-events-auto rounded-b-[40%] focus-visible:outline-offset-4"
+      className="lamp-button group/lamp absolute cursor-pointer pointer-events-auto rounded-b-[40%] focus-visible:outline-offset-4"
     >
       <svg viewBox="0 0 96 172" className="h-full w-full overflow-visible" aria-hidden="true">
         <defs>
@@ -41,8 +43,8 @@ export function Lamp({ style, onUse }: LampProps) {
           </radialGradient>
         </defs>
 
-        {/* Se balancea apenas al pasar el mouse */}
-        <g className="origin-[48px_0px] transition-transform duration-700 ease-[var(--ease-swing)] group-hover/lamp:rotate-[2.5deg] group-active/lamp:rotate-[-1deg]">
+        {/* Se balancea apenas al pasar el mouse; el haz de luz de la escena gira con ella (ver .lamp-rig) */}
+        <g className="lamp-rig" style={{ transformOrigin: '48px 0px' }}>
           <line x1="48" y1="-40" x2="48" y2="100" className="stroke-ink-soft" strokeWidth="1.2" />
           <rect x="42" y="94" width="12" height="9" rx="2" fill="#b8893a" />
 

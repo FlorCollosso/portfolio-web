@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/useI18n'
 import type { SkillGroup } from '../../types/portfolio'
 import { Handnote } from '../ui/Handnote'
 import { Reveal } from '../ui/Reveal'
@@ -8,20 +9,23 @@ const drawerTones = ['bg-teal-soft', 'bg-rose-soft', 'bg-[#f3e4c4] dark:bg-[#3a3
 // Sin barras de porcentaje: un "80 % de React" no le dice nada a quien contrata.
 // Cada disciplina es un cajón etiquetado de la caja de herramientas.
 export function Skills({ skills, languages }: { skills: SkillGroup[]; languages: string[] }) {
+  const { t } = useI18n()
   return (
     <Section
       id="herramientas"
       number="03"
-      eyebrow="Herramientas"
-      title={<>La caja de <em>herramientas</em></>}
-      intro="Lo que uso en proyectos reales, ordenado por disciplina. Sin porcentajes: prefiero mostrarlo en el trabajo."
-      aside={
-        <Handnote arrow="down" tilt={4}>
-          lo que más uso: Figma + React
-        </Handnote>
-      }
+      eyebrow={t('skills.eyebrow')}
+      title={<>{t('skills.titleA')} <em>{t('skills.titleB')}</em></>}
+      intro={t('skills.intro')}
     >
-      <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2">
+      {/* Anotación al margen, justo encima de las cards: la flecha nace al final de la frase y baja hasta ellas.
+          Al estar en el flujo (no flotando en el encabezado), la distancia a las cards es siempre la misma. */}
+      <div className="-mt-6 flex sm:justify-end md:-mt-10">
+        <Handnote arrow="curl-down" className="text-xl" tilt={3}>
+          {t('skills.note')}
+        </Handnote>
+      </div>
+      <div className="mt-11 grid gap-x-5 gap-y-10 sm:grid-cols-2">
         {skills.map((group, i) => (
           <Reveal key={group.id} delay={i * 90}>
             <div className={`group relative h-full rounded-[0.4rem] p-7 pt-12 transition-transform duration-500 ease-[var(--ease-swing)] hover:-translate-y-1 sm:p-9 sm:pt-14 ${drawerTones[i % drawerTones.length]}`}>
@@ -54,7 +58,7 @@ export function Skills({ skills, languages }: { skills: SkillGroup[]; languages:
       </div>
 
       <Reveal delay={200} className="mt-10 flex flex-wrap items-baseline gap-x-6 gap-y-2 border-t border-line pt-6">
-        <h3 className="font-serif text-sm text-teal-deep italic">Idiomas</h3>
+        <h3 className="font-serif text-sm text-teal-deep italic">{t('skills.languages')}</h3>
         <p className="text-ink-soft">{languages.join('  ·  ')}</p>
       </Reveal>
     </Section>

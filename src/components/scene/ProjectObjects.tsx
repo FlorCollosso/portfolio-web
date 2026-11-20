@@ -1,5 +1,5 @@
 import type { CSSProperties, FocusEvent, PointerEvent } from 'react'
-import { categoryLabels } from '../../data/labels'
+import { useI18n, type Translate } from '../../i18n/useI18n'
 import { box, SCENE, type BookSlot, type FrameSlot } from '../../data/scene'
 import type { Project } from '../../types/portfolio'
 import { asset } from '../../utils/asset'
@@ -12,11 +12,21 @@ export interface AttentionHandlers {
 }
 
 // Etiqueta tipo museo que aparece al pasar el mouse o con el foco del teclado.
-export function SceneLabel({ title, detail, place = 'top' }: { title: string; detail: string; place?: 'top' | 'bottom' }) {
+interface SceneLabelProps {
+  title: string
+  detail: string
+  place?: 'top' | 'bottom'
+  /** Centro del objeto en unidades de la escena: cerca de un borde, el cartel se alinea hacia adentro */
+  at?: number
+}
+
+export function SceneLabel({ title, detail, place = 'top', at = SCENE.width / 2 }: SceneLabelProps) {
+  const { t } = useI18n()
+  const align = at < 150 ? 'left-[-0.4rem]' : at > SCENE.width - 150 ? 'right-[-0.4rem]' : 'left-1/2 -translate-x-1/2'
   return (
     <span
       aria-hidden="true"
-      className={`pointer-events-none absolute left-1/2 z-30 w-max max-w-48 -translate-x-1/2 rounded-md border border-line bg-card px-3 py-2 text-left opacity-0 shadow-lg shadow-ink/10 transition-all duration-300 ease-[var(--ease-soft)] group-focus-visible:opacity-100 [@media(hover:hover)]:group-hover:opacity-100 ${
+      className={`pointer-events-none absolute z-30 w-max max-w-48 rounded-md border border-line bg-card px-3 py-2 text-left opacity-0 shadow-lg shadow-ink/10 transition-all duration-300 ease-[var(--ease-soft)] group-focus-visible:opacity-100 [@media(hover:hover)]:group-hover:opacity-100 ${align} ${
         place === 'top'
           ? 'bottom-[calc(100%+0.6rem)] translate-y-1 group-focus-visible:translate-y-0 [@media(hover:hover)]:group-hover:translate-y-0'
           : 'top-[calc(100%+0.6rem)] -translate-y-1 group-focus-visible:translate-y-0 [@media(hover:hover)]:group-hover:translate-y-0'
@@ -24,12 +34,12 @@ export function SceneLabel({ title, detail, place = 'top' }: { title: string; de
     >
       <span className="block font-serif text-base leading-tight font-semibold text-ink">{title}</span>
       <span className="mt-0.5 block text-xs text-muted">{detail}</span>
-      <span className="mt-1 block font-hand text-sm text-rose-deep">abrir →</span>
+      <span className="mt-1 block font-hand text-sm text-rose-deep">{t('scene.open')}</span>
     </span>
   )
 }
 
-const detailOf = (p: Project) => `${categoryLabels[p.category]}${p.year ? ` · ${p.year}` : ''}`
+const detailOf = (p: Project, t: Translate) => `${t(`category.${p.category}`)}${p.year ? ` · ${p.year}` : ''}`
 
 interface BookProps extends Partial<AttentionHandlers> {
   slot: BookSlot
@@ -43,6 +53,7 @@ interface BookProps extends Partial<AttentionHandlers> {
 
 // Un lomo de libro dibujado con CSS. Si representa un proyecto, es un botón que se "asoma" de la repisa.
 export function Book({ slot, project, lying = false, baseY, order, onOpen, ...handlers }: BookProps) {
+  const { t } = useI18n()
   const style: CSSProperties = {
     ...box(slot.x, baseY - slot.h, slot.w, slot.h),
     animationDelay: `${180 + order * 70}ms`,
@@ -80,15 +91,15 @@ export function Book({ slot, project, lying = false, baseY, order, onOpen, ...ha
     <button
       type="button"
       onClick={() => onOpen?.(project)}
-      aria-label={`${project.title}: ${detailOf(project)}. Abrir proyecto`}
+      aria-label={t('scene.openProject', { title: project.title, detail: detailOf(project, t) })}
       style={style}
       {...handlers}
       className="group absolute pointer-events-auto cursor-pointer [animation:scene-in_0.8s_var(--ease-soft)_backwards] hover:z-20 focus-visible:z-20"
     >
-      <span className={`block h-full w-full transition-transform duration-500 ease-[var(--ease-swing)] ${lying ? 'group-hover:-translate-x-[6%] group-focus-visible:-translate-x-[6%]' : 'group-hover:-translate-y-[9%] group-focus-visible:-translate-y-[9%]'}`}>
+      <span className={`block h-full w-full transition-transform duration-500 ease-[var(--ease-swing)] ${lying ? 'group-hover:-translate-x-[6%] group-focus-visible:-translate-x-[6%]' : 'group-hover:-translate-y-[4.5%] group-focus-visible:-translate-y-[4.5%]'}`}>
         {spine}
       </span>
-      <SceneLabel title={project.title} detail={detailOf(project)} />
+      <SceneLabel title={project.title} detail={detailOf(project, t)} at={slot.x + slot.w / 2} />
     </button>
   )
 }
@@ -102,6 +113,7 @@ interface FrameProps extends AttentionHandlers {
 
 // Cuadros colgados, un portarretratos y una postal: cada uno abre su proyecto.
 export function Frame({ slot, project, order, onOpen, ...handlers }: FrameProps) {
+  const { t } = useI18n()
   const style: CSSProperties = { ...box(slot.x, slot.y, slot.w, slot.h), animationDelay: `${120 + order * 90}ms` }
   const img = project.image && (
     <img
@@ -124,7 +136,7 @@ export function Frame({ slot, project, order, onOpen, ...handlers }: FrameProps)
     <button
       type="button"
       onClick={() => onOpen(project)}
-      aria-label={`${project.title}: ${detailOf(project)}. Abrir proyecto`}
+      aria-label={t('scene.openProject', { title: project.title, detail: detailOf(project, t) })}
       style={style}
       {...handlers}
       className="group absolute pointer-events-auto cursor-pointer [animation:scene-in_0.9s_var(--ease-soft)_backwards] hover:z-20 focus-visible:z-20"
@@ -148,7 +160,7 @@ export function Frame({ slot, project, order, onOpen, ...handlers }: FrameProps)
       {slot.variant === 'stand' && (
         <span aria-hidden="true" className="absolute -bottom-[2%] left-[58%] h-[30%] w-[5%] origin-bottom skew-x-[-18deg] bg-ink-soft/80" />
       )}
-      <SceneLabel title={project.title} detail={detailOf(project)} place={slot.y < SCENE.shelfTop ? 'bottom' : 'top'} />
+      <SceneLabel title={project.title} detail={detailOf(project, t)} place={slot.y < SCENE.shelfTop ? 'bottom' : 'top'} at={slot.x + slot.w / 2} />
     </button>
   )
 }

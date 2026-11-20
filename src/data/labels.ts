@@ -1,15 +1,3 @@
-import type { ProjectCategory } from '../types/portfolio'
-
-export const categoryLabels: Record<ProjectCategory, string> = {
-  web: 'Diseño y desarrollo web',
-  ux: 'UX/UI',
-  brand: 'Identidad gráfica',
-}
-
-export const navItems = [
-  { id: 'sobre-mi', label: 'Sobre mí' },
-  { id: 'proyectos', label: 'Proyectos' },
-  { id: 'herramientas', label: 'Herramientas' },
-  { id: 'trayectoria', label: 'Trayectoria' },
-  { id: 'contacto', label: 'Contacto' },
-]
+// Secciones del menú, en orden. El texto de cada una está en src/locales/ (claves nav.<id>);
+// el id es también el ancla de la sección, así que no cambia con el idioma.
+export const navItems = ['sobre-mi', 'proyectos', 'herramientas', 'trayectoria', 'contacto'] as const

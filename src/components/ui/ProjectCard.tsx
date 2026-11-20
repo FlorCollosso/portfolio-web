@@ -1,6 +1,6 @@
 import { FiArrowUpRight } from 'react-icons/fi'
 import type { Project } from '../../types/portfolio'
-import { categoryLabels } from '../../data/labels'
+import { useI18n } from '../../i18n/useI18n'
 import { ProjectCover } from './ProjectCover'
 import { Tag } from './Tag'
 
@@ -11,6 +11,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, onOpen, large = false }: ProjectCardProps) {
+  const { t } = useI18n()
   return (
     <article
       className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-white transition-shadow duration-300 hover:shadow-xl hover:shadow-ink/5 ${
@@ -27,7 +28,7 @@ export function ProjectCard({ project, onOpen, large = false }: ProjectCardProps
 
       <div className={`flex flex-1 flex-col gap-3 ${large ? 'p-6 md:p-10' : 'p-6'}`}>
         <p className="text-xs font-semibold tracking-widest text-teal-deep uppercase">
-          {categoryLabels[project.category]}
+          {t(`category.${project.category}`)}
           {project.year && <span className="text-muted"> · {project.year}</span>}
         </p>
         <h3 className={`font-bold tracking-tight ${large ? 'text-2xl' : 'text-xl'}`}>
@@ -41,7 +42,7 @@ export function ProjectCard({ project, onOpen, large = false }: ProjectCardProps
           </button>
         </h3>
         <p className="text-muted text-pretty">{project.summary}</p>
-        <ul className="mt-auto flex flex-wrap gap-2 pt-2" aria-label="Herramientas">
+        <ul className="mt-auto flex flex-wrap gap-2 pt-2" aria-label={t('card.tools')}>
           {project.tags.slice(0, large ? 5 : 3).map((tag) => (
             <li key={tag}>
               <Tag>{tag}</Tag>
@@ -49,7 +50,7 @@ export function ProjectCard({ project, onOpen, large = false }: ProjectCardProps
           ))}
         </ul>
         <span className="inline-flex items-center gap-1 text-sm font-semibold text-rose-deep" aria-hidden="true">
-          Ver detalle <FiArrowUpRight className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          {t('card.details')} <FiArrowUpRight className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
       </div>
     </article>

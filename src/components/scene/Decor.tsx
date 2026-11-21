@@ -96,11 +96,12 @@ export function LampHint({ style }: { style: CSSProperties }) {
   const { t } = useI18n()
   return (
     <div aria-hidden="true" style={style} className="pointer-events-none absolute [animation:scene-in_1s_var(--ease-soft)_1.6s_backwards]">
-      <p className="font-hand text-[3.1cqw] leading-none text-rose-deep -rotate-6">{t('scene.pullHint')}</p>
-      <svg viewBox="0 0 80 40" className="mt-[2%] ml-[48%] w-[48%] overflow-visible">
+      <svg viewBox="0 0 80 40" className="mt-[-5%] ml-[55%] w-[48%] -scale-x-100 rotate-120 overflow-visible">
         <path d="M2 30 C 26 36, 52 28, 72 8" fill="none" className="stroke-rose-deep" strokeWidth="1.6" strokeLinecap="round" />
         <path d="M62 8 L73 7 L71 18" fill="none" className="stroke-rose-deep" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
+      <p className="font-hand text-[3.1cqw] leading-none text-rose-deep -rotate-6 mt-[15%] ml-[-10%]">{t('scene.pullHint')}</p>
+      
     </div>
   )
 }

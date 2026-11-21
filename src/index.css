@@ -1130,7 +1130,7 @@ dialog[data-closing]::backdrop {
   max-width: 100%;
 }
 
-/* Confirmación chica para dejar la ronda (sobre la pausa) */
+/* Confirmación chica antes de perder una ronda (volver al menú o reiniciar) */
 .mq-confirm {
   position: absolute;
   inset: 0;

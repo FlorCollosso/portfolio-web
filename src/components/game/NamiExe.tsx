@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { FiPause, FiPlay, FiRotateCcw, FiVolume2, FiVolumeX, FiX } from 'react-icons/fi'
 import { useReducedMotion } from '../../hooks/useMediaQuery'
@@ -17,6 +17,7 @@ import { SPARK } from './engine/sprites'
 
 type Screen = 'title' | 'playing' | 'paused' | 'over'
 type Control = 'up' | 'down' | 'left' | 'right' | 'action' | 'boost'
+type ConfirmKind = 'menu' | 'reset'
 
 const KEYS: Record<string, Control> = {
   ArrowUp: 'up',
@@ -69,13 +70,18 @@ export default function NamiExe({ onClose }: NamiExeProps) {
   const [muted, setMuted] = useState(() => sound.muted)
   const [best, setBest] = useState(readBest)
   const [result, setResult] = useState<{ summary: Summary; record: boolean; previous: number; line: MessageKey } | null>(null)
-  // Confirmación para dejar una ronda en pausa y volver al menú
-  const [confirmMenu, setConfirmMenu] = useState(false)
-  const confirmRef = useRef(false)
-  useEffect(() => {
-    confirmRef.current = confirmMenu
-  }, [confirmMenu])
-  const pauseMenuRef = useRef<HTMLButtonElement>(null)
+  // Confirmación antes de perder una ronda activa (volver al menú o reiniciar)
+  const [confirm, setConfirmState] = useState<ConfirmKind | null>(null)
+  const confirmRef = useRef<ConfirmKind | null>(null)
+  const setConfirm = useCallback((kind: ConfirmKind | null) => {
+    confirmRef.current = kind
+    setConfirmState(kind)
+  }, [])
+  // Para restaurar todo al cancelar: si se estaba jugando y qué control abrió la confirmación
+  const wasPlaying = useRef(false)
+  const returnFocus = useRef<HTMLElement | null>(null)
+  // Teclas apretadas después de abrir: una tecla que ya venía presionada no puede activar un botón
+  const freshKeys = useRef(new Set<string>())
   // El estado de la pantalla también en una ref, para los listeners de teclado y foco
   const screenStateRef = useRef<Screen>('title')
   // Espera entre el final del turno y el resumen (se cancela si se reinicia antes)
@@ -157,14 +163,15 @@ export default function NamiExe({ onClose }: NamiExeProps) {
     gameRef.current?.play()
     sound.startMusic()
     setResult(null)
-    setConfirmMenu(false)
+    setConfirm(null)
     show('playing')
     screenRef.current?.focus()
-  }, [show, click, sound])
+  }, [show, click, sound, setConfirm])
 
   const pause = useCallback(() => {
     const game = gameRef.current
-    if (!game || screenStateRef.current !== 'playing') return
+    // Con la confirmación abierta el motor ya está detenido
+    if (!game || screenStateRef.current !== 'playing' || confirmRef.current) return
     game.pause()
     for (const k of Object.keys(game.input) as Control[]) game.input[k] = false
     sound.musicLevel(0.35)
@@ -173,12 +180,12 @@ export default function NamiExe({ onClose }: NamiExeProps) {
 
   const resume = useCallback(() => {
     click()
-    setConfirmMenu(false)
+    setConfirm(null)
     gameRef.current?.resume()
     sound.musicLevel(1)
     show('playing')
     screenRef.current?.focus()
-  }, [show, click, sound])
+  }, [show, click, sound, setConfirm])
 
   /** Vuelve a la pantalla de inicio sin cerrar la consola: corta la ronda y limpia todo */
   const goMenu = useCallback(() => {
@@ -190,23 +197,51 @@ export default function NamiExe({ onClose }: NamiExeProps) {
       game.menu()
     }
     setResult(null)
-    setConfirmMenu(false)
+    setConfirm(null)
     // La música queda de fondo, un poco más baja que en el juego
     sound.musicLevel(0.6)
     show('title')
-  }, [show, click, sound])
+  }, [show, click, sound, setConfirm])
 
-  /** Pausa → "Menú principal": primero pregunta, porque se pierde la ronda */
-  const askMenu = () => {
+  /** Abre una confirmación y congela el turno detrás (sin pasar a la pantalla de pausa) */
+  const askConfirm = useCallback(
+    (kind: ConfirmKind) => {
+      click()
+      const game = gameRef.current
+      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      freshKeys.current.clear()
+      wasPlaying.current = screenStateRef.current === 'playing'
+      if (game && wasPlaying.current) {
+        game.pause()
+        for (const k of Object.keys(game.input) as Control[]) game.input[k] = false
+        sound.musicLevel(0.35)
+      }
+      setConfirm(kind)
+    },
+    [click, sound, setConfirm],
+  )
+
+  /** Cancelar: todo sigue exactamente como estaba (jugando o en pausa), con el foco en quien la abrió */
+  const cancelConfirm = () => {
     click()
-    setConfirmMenu(true)
+    setConfirm(null)
+    if (wasPlaying.current) {
+      gameRef.current?.resume()
+      sound.musicLevel(1)
+    }
+    requestAnimationFrame(() => {
+      const target = returnFocus.current
+      if (target?.isConnected && target !== document.body) target.focus()
+      else screenRef.current?.focus()
+    })
   }
-  const cancelMenu = () => {
-    click()
-    setConfirmMenu(false)
-    // De vuelta a la pausa, con el foco donde estaba
-    requestAnimationFrame(() => pauseMenuRef.current?.focus())
-  }
+
+  /** RESET, botón de reinicio y tecla R: si hay una ronda en juego se confirma; si no, arranca directo */
+  const requestReset = useCallback(() => {
+    const active = (screenStateRef.current === 'playing' || screenStateRef.current === 'paused') && gameRef.current?.mode !== 'over'
+    if (active) askConfirm('reset')
+    else start()
+  }, [askConfirm, start])
 
   const close = () => {
     click()
@@ -216,6 +251,14 @@ export default function NamiExe({ onClose }: NamiExeProps) {
   // Teclado: mover, atender y ronronear sin que la página se desplace; P pausa
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Con la confirmación abierta, solo responden sus botones (Escape la cancela desde el diálogo)
+      if (confirmRef.current) {
+        const activates = e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter'
+        if (e.type === 'keydown' && !e.repeat) freshKeys.current.add(e.code)
+        else if (activates && !freshKeys.current.has(e.code)) e.preventDefault()
+        if (e.type === 'keydown' && e.repeat && activates) e.preventDefault()
+        return
+      }
       const control = KEYS[e.code]
       const playing = screenStateRef.current === 'playing'
       if (control && playing) {
@@ -224,8 +267,6 @@ export default function NamiExe({ onClose }: NamiExeProps) {
         if (gameRef.current) gameRef.current.input[control] = e.type === 'keydown'
         return
       }
-      // Con la confirmación abierta, solo responden sus botones
-      if (confirmRef.current) return
       if (e.type === 'keydown' && e.code === 'KeyP') {
         if (playing) pause()
         else if (screenStateRef.current === 'paused') resume()
@@ -233,7 +274,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
       // R: reinicia la ronda (igual que el botón RESET de la consola)
       if (e.type === 'keydown' && e.code === 'KeyR' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault()
-        start()
+        requestReset()
       }
     }
     window.addEventListener('keydown', onKey, true)
@@ -242,7 +283,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
       window.removeEventListener('keydown', onKey, true)
       window.removeEventListener('keyup', onKey, true)
     }
-  }, [pause, resume, start, sound])
+  }, [pause, resume, requestReset, sound])
 
   // Si la ventana del navegador pierde el foco, el turno se pausa
   useEffect(() => {
@@ -284,7 +325,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
           // sin captura: igual funciona mientras el dedo siga encima
         }
         sound.unlock()
-        if (gameRef.current && screenStateRef.current === 'playing') gameRef.current.input[control] = true
+        if (gameRef.current && screenStateRef.current === 'playing' && !confirmRef.current) gameRef.current.input[control] = true
       },
       onPointerUp: release,
       onPointerCancel: release,
@@ -301,19 +342,19 @@ export default function NamiExe({ onClose }: NamiExeProps) {
       ref={dialogRef}
       onClose={onClose}
       onCancel={(e) => {
-        // Escape con la confirmación abierta: solo la cierra (vuelve a la pausa)
+        // Escape con la confirmación abierta: solo la cancela
         if (confirmRef.current) {
           e.preventDefault()
-          cancelMenu()
+          cancelConfirm()
         }
       }}
-      onClick={(e) => e.target === dialogRef.current && close()}
+      onClick={(e) => e.target === dialogRef.current && !confirmRef.current && close()}
       aria-labelledby="mq-title"
       className="mq-dialog m-auto bg-transparent p-0 text-ink backdrop:bg-[#0d0c14]/70 backdrop:backdrop-blur-[2px]"
     >
       <div className={`mq-console ${reduced ? '' : 'mq-console-in'}`}>
         {/* Barra superior: luz, nombre y botones */}
-        <div className="mq-head">
+        <div className="mq-head" inert={confirm !== null}>
           <span aria-hidden="true" className={`mq-led-dot ${reduced ? '' : 'mq-led'}`} />
           <h2 id="mq-title" className="mq-label">
             NAMI.EXE <span className="opacity-70">— Quality Control</span>
@@ -323,7 +364,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
               <IconButton label={playing ? t('game.pause') : t('game.resume')} onClick={playing ? pause : resume}>
                 {playing ? <FiPause aria-hidden="true" /> : <FiPlay aria-hidden="true" />}
               </IconButton>
-              <IconButton label={t('game.restart')} onClick={start}>
+              <IconButton label={t('game.restart')} onClick={requestReset}>
                 <FiRotateCcw aria-hidden="true" />
               </IconButton>
             </>
@@ -370,7 +411,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
             )}
 
             {screen === 'paused' && (
-              <div className="mq-info mq-info-pause">
+              <div className="mq-info mq-info-pause" inert={confirm !== null}>
                 <div className="mq-info-body">
                   <p className="mq-big mq-pause-title">{t('game.paused')}</p>
                   <p className="mq-goal mq-goal-soft">
@@ -384,32 +425,19 @@ export default function NamiExe({ onClose }: NamiExeProps) {
                     <button type="button" autoFocus onClick={resume} className="mq-btn mq-btn-main">
                       {t('game.continue')}
                     </button>
-                    <button type="button" ref={pauseMenuRef} onClick={askMenu} className="mq-btn mq-btn-sm mq-btn-ghost">
+                    <button type="button" onClick={() => askConfirm('menu')} className="mq-btn mq-btn-sm mq-btn-ghost">
                       {t('game.mainMenu')}
                     </button>
                   </div>
                 </div>
-                {confirmMenu && (
-                  <div className="mq-confirm">
-                    <div className="mq-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="mq-confirm-title" aria-describedby="mq-confirm-text">
-                      <p id="mq-confirm-title" className="mq-confirm-title">
-                        {t('game.confirmTitle')}
-                      </p>
-                      <p id="mq-confirm-text" className="mq-confirm-text">
-                        {t('game.confirmText')}
-                      </p>
-                      <div className="mq-confirm-actions">
-                        <button type="button" autoFocus onClick={cancelMenu} className="mq-btn mq-btn-sm">
-                          {t('game.keepPlaying')}
-                        </button>
-                        <button type="button" onClick={goMenu} className="mq-btn mq-btn-sm mq-btn-ghost">
-                          {t('game.backToMenu')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
+            )}
+
+            {confirm === 'menu' && (
+              <ConfirmBox title={t('game.confirmTitle')} text={t('game.confirmText')} cancelLabel={t('game.keepPlaying')} confirmLabel={t('game.backToMenu')} onCancel={cancelConfirm} onConfirm={goMenu} />
+            )}
+            {confirm === 'reset' && (
+              <ConfirmBox title={t('game.resetTitleConfirm')} text={t('game.resetText')} cancelLabel={t('game.resetCancel')} confirmLabel={t('game.resetConfirm')} onCancel={cancelConfirm} onConfirm={start} />
             )}
 
             {screen === 'over' && result && (
@@ -490,7 +518,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
         </div>
 
         {/* Botonera de la consola: también son los controles táctiles */}
-        <div className="mq-pad">
+        <div className="mq-pad" inert={confirm !== null}>
           <div className="mq-dpad" role="group" aria-label={t('game.padMove')}>
             <button type="button" className="mq-dpad-btn mq-dpad-up" aria-label={t('game.padUp')} {...hold('up')}>
               <span aria-hidden="true">▲</span>
@@ -510,7 +538,7 @@ export default function NamiExe({ onClose }: NamiExeProps) {
           {/* Botones de sistema: RESET reinicia la ronda, START empieza o pausa */}
           <div className="mq-sys">
             <div className="mq-sys-col">
-              <button type="button" onClick={start} className="mq-pill mq-pill-reset" aria-label={t('game.resetAria')} title={t('game.resetTitle')}>
+              <button type="button" onClick={requestReset} className="mq-pill mq-pill-reset" aria-label={t('game.resetAria')} title={t('game.resetTitle')}>
                 <span aria-hidden="true" />
               </button>
               <span aria-hidden="true" className="mq-label mq-sys-label">
@@ -619,6 +647,31 @@ function Controls({ full = false }: { full?: boolean }) {
         )}
       </ul>
     </>
+  )
+}
+
+/** Confirmación del juego: la opción segura (cancelar) va primero y recibe el foco */
+function ConfirmBox({ title, text, cancelLabel, confirmLabel, onCancel, onConfirm }: { title: string; text: string; cancelLabel: string; confirmLabel: string; onCancel: () => void; onConfirm: () => void }) {
+  const id = useId()
+  return (
+    <div className="mq-confirm">
+      <div className="mq-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`}>
+        <p id={`${id}-title`} className="mq-confirm-title">
+          {title}
+        </p>
+        <p id={`${id}-text`} className="mq-confirm-text">
+          {text}
+        </p>
+        <div className="mq-confirm-actions">
+          <button type="button" autoFocus onClick={onCancel} className="mq-btn mq-btn-sm">
+            {cancelLabel}
+          </button>
+          <button type="button" onClick={onConfirm} className="mq-btn mq-btn-sm mq-btn-ghost">
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

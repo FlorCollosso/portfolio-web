@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { FiArrowUpRight, FiCheck, FiCopy, FiDownload } from 'react-icons/fi'
 import type { Profile } from '../../types/portfolio'
+import { useCv } from '../../i18n/useCv'
 import { useI18n } from '../../i18n/useI18n'
-import { asset } from '../../utils/asset'
 import { CatFace } from '../scene/CatFace'
 import { buttonBase } from '../ui/ButtonLink'
 import { Reveal } from '../ui/Reveal'
@@ -13,6 +13,7 @@ const YEAR = new Date().getFullYear()
 // Contacto como postal: mensaje a la izquierda, dirección y estampilla a la derecha.
 export function Contact({ profile }: { profile: Profile }) {
   const { t } = useI18n()
+  const cv = useCv()
   const [copied, setCopied] = useState(false)
 
   const copyEmail = async () => {
@@ -98,7 +99,7 @@ export function Contact({ profile }: { profile: Profile }) {
                     {copied ? <FiCheck aria-hidden="true" /> : <FiCopy aria-hidden="true" />}
                     {copied ? t('contact.copied') : t('contact.copy')}
                   </button>
-                  <a href={asset(profile.cvUrl)} download className={`${buttonBase} border border-ink/20 bg-card hover:border-ink`}>
+                  <a href={cv.href} download={cv.fileName} className={`${buttonBase} border border-ink/20 bg-card hover:border-ink`}>
                     <FiDownload aria-hidden="true" /> {t('contact.cv')}
                   </a>
                   <span role="status" className="sr-only">

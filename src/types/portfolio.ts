@@ -18,7 +18,6 @@ export interface Profile {
   summary: string
   about: string[]
   photo: ResponsiveImage
-  cvUrl: string
   socials: SocialLink[]
 }
 

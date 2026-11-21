@@ -18,7 +18,6 @@ export const portfolioData: PortfolioData = {
       'Me interesan los equipos donde diseño y desarrollo trabajan juntos desde el principio, porque ahí es donde mejor funciono.',
     ],
     photo: { base: '/images/profile-img', alt: 'Florencia Collosso sonriendo, con un saco celeste' },
-    cvUrl: '/cv/CV_Florencia_Collosso.pdf',
     socials: [
       { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/florencia-collosso/' },
       { id: 'github', label: 'GitHub', url: 'https://github.com/FlorCollosso' },

@@ -1,8 +1,7 @@
 import { useCallback, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { books, box, frames, lyingBooks, petFrames, SCENE } from '../../data/scene'
 import { useFinePointer, useReducedMotion } from '../../hooks/useMediaQuery'
-import type { PetPortrait, Profile, Project, SecretNote as SecretNoteData } from '../../types/portfolio'
-import { asset } from '../../utils/asset'
+import type { PetPortrait, Project, SecretNote as SecretNoteData } from '../../types/portfolio'
 import { Cat } from './Cat'
 import { HangingPlant, LampHint, Plant, SceneWindow, Vase } from './Decor'
 import { GameConsole } from './GameConsole'
@@ -11,11 +10,11 @@ import { PetFrame } from './PetFrame'
 import { Book, Frame, SceneLabel, type AttentionHandlers } from './ProjectObjects'
 import { SecretNote } from './SecretNote'
 import { Yarn } from './Yarn'
+import { useCv } from '../../i18n/useCv'
 import { useI18n } from '../../i18n/useI18n'
 
 interface LibrarySceneProps {
   projects: Project[]
-  profile: Profile
   note: SecretNoteData
   pets: PetPortrait[]
   onOpenProject: (project: Project) => void
@@ -36,8 +35,9 @@ const LAMP_X = 440 + 48
 const LAMP_PIVOT = `${(LAMP_X / SCENE.width) * 100}% 0%`
 
 // El estudio: pared, ventana, repisas, libros-proyecto, cuadros, el gato y la lámpara.
-export function LibraryScene({ projects, profile, note, pets, onOpenProject }: LibrarySceneProps) {
+export function LibraryScene({ projects, note, pets, onOpenProject }: LibrarySceneProps) {
   const { t } = useI18n()
+  const cv = useCv()
   const sceneRef = useRef<HTMLDivElement>(null)
   // La "cámara": todo lo que está dentro se mueve junto, como una sola pieza
   const stageRef = useRef<HTMLDivElement>(null)
@@ -205,8 +205,8 @@ export function LibraryScene({ projects, profile, note, pets, onOpenProject }: L
             <Plant style={box(0.9, shelfBottom - 146.5, 131.1, 148.2)} />
             <GameConsole style={box(348, shelfBottom - 64, 42, 64)} reduced={reduced} {...attention} />
             <a
-              href={asset(profile.cvUrl)}
-              download
+              href={cv.href}
+              download={cv.fileName}
               aria-label={t('scene.cvAria')}
               style={box(408, shelfBottom - 34, 140, 34)}
               {...attention}

@@ -19,7 +19,7 @@ npm run lint       # revisa el código con oxlint
 ```
 portfolio/
 ├── public/
-│   ├── cv/CV_Florencia_Collosso.pdf      # CV descargable (reemplazar por la versión nueva)
+│   ├── cv/Florencia_Collosso_CV_ES.pdf   # CV en español (también _EN.pdf; ver src/data/cv.ts)
 │   ├── images/                            # WebP optimizados en 640 y 1280 px
 │   │   ├── profile-img-{640,1280}.webp
 │   │   └── projects/*.webp
@@ -97,5 +97,5 @@ La versión anterior del sitio quedó guardada en `_respaldo-version-anterior/` 
 ## Pendiente
 
 - [x] Agregar portadas reales para MR Obras, Rodanteros, Spark y Magic Bloom (`public/images/projects`).
-- [ ] Reemplazar `public/cv/CV_Florencia_Collosso.pdf` por el CV nuevo.
+- [ ] Agregar `public/cv/Florencia_Collosso_CV_ES.pdf` y `public/cv/Florencia_Collosso_CV_EN.pdf`.
 - [ ] Completar el resumen de Magic Bloom y el detalle del trabajo en el Ministerio.

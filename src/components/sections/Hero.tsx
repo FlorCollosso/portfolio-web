@@ -1,7 +1,7 @@
 import { FiArrowDown, FiDownload, FiMapPin } from 'react-icons/fi'
 import type { PetPortrait, Profile, Project, SecretNote } from '../../types/portfolio'
+import { useCv } from '../../i18n/useCv'
 import { useI18n } from '../../i18n/useI18n'
-import { asset } from '../../utils/asset'
 import { LibraryScene } from '../scene/LibraryScene'
 import { ButtonLink } from '../ui/ButtonLink'
 import { Handnote } from '../ui/Handnote'
@@ -19,6 +19,7 @@ const enter = (delay: string) => ({ animation: `scene-in 1s var(--ease-soft) ${d
 
 export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps) {
   const { t } = useI18n()
+  const cv = useCv()
   const firstName = profile.name.split(' ')[0]
   const [roleA, roleB] = profile.role.split(/ y | and /)
 
@@ -61,7 +62,7 @@ export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps
             <ButtonLink href="#proyectos" icon={<FiArrowDown aria-hidden="true" />}>
               {t('hero.ctaProjects')}
             </ButtonLink>
-            <ButtonLink href={asset(profile.cvUrl)} download variant="secondary" icon={<FiDownload aria-hidden="true" />}>
+            <ButtonLink href={cv.href} download={cv.fileName} variant="secondary" icon={<FiDownload aria-hidden="true" />}>
               {t('hero.ctaCv')}
             </ButtonLink>
           </div>
@@ -74,7 +75,7 @@ export function Hero({ profile, projects, note, pets, onOpenProject }: HeroProps
         </div>
 
         <figure className="mx-auto w-full max-w-xl lg:mr-0 lg:max-w-[min(100%,calc((100svh-9rem)*0.942))]">
-          <LibraryScene projects={projects} profile={profile} note={note} pets={pets} onOpenProject={onOpenProject} />
+          <LibraryScene projects={projects} note={note} pets={pets} onOpenProject={onOpenProject} />
           <figcaption className="mt-4 flex items-start gap-2 px-2 text-sm text-muted">
             <span aria-hidden="true" className="mt-1.5 inline-block size-2 shrink-0 rotate-45 bg-rose" />
             <span>

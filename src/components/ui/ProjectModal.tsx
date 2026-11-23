@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { FiCode, FiExternalLink, FiFigma, FiFileText, FiX } from 'react-icons/fi'
+import { getCaseStudy } from '../../data/caseStudies'
 import type { Project } from '../../types/portfolio'
 import { useI18n } from '../../i18n/useI18n'
+import { CaseStudy } from '../case-study/CaseStudy'
 import { ButtonLink } from './ButtonLink'
 import { ProjectCover } from './ProjectCover'
 import { Tag } from './Tag'
@@ -15,11 +17,18 @@ interface ProjectModalProps {
 export function ProjectModal({ project, onClose }: ProjectModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const { t } = useI18n()
+  // Los proyectos con caso de estudio usan el modal amplio; el resto conserva el modal simple.
+  const study = getCaseStudy(project?.id)
 
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
-    if (project && !dialog.open) dialog.showModal()
+    if (project && !dialog.open) {
+      dialog.scrollTop = 0
+      dialog.showModal()
+      // Si el contenido scrollea en su propia área, recibe el foco para que funcionen las flechas del teclado.
+      dialog.querySelector<HTMLElement>('[data-modal-scroll]')?.focus({ preventScroll: true })
+    }
     if (!project && dialog.open) dialog.close()
   }, [project])
 
@@ -33,12 +42,19 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
   return (
     <dialog
       ref={dialogRef}
-      onClose={onClose}
+      onClose={(e) => e.target === dialogRef.current && onClose()}
       onClick={(e) => e.target === dialogRef.current && onClose()}
       aria-labelledby="project-modal-title"
-      className="m-auto max-h-[90dvh] w-[min(100%-2rem,48rem)] overflow-y-auto rounded-[0.5rem] bg-card p-0 text-ink shadow-2xl motion-safe:transition-[opacity,translate] motion-safe:duration-200 motion-safe:starting:open:translate-y-3 motion-safe:starting:open:opacity-0"
+      className={
+        study
+          ? 'm-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-transparent p-0 text-ink motion-safe:transition-[opacity,translate] motion-safe:duration-200 motion-safe:starting:open:translate-y-3 motion-safe:starting:open:opacity-0 lg:p-6'
+          : 'm-auto max-h-[90dvh] w-[min(100%-2rem,48rem)] overflow-y-auto rounded-[0.5rem] bg-card p-0 text-ink shadow-2xl motion-safe:transition-[opacity,translate] motion-safe:duration-200 motion-safe:starting:open:translate-y-3 motion-safe:starting:open:opacity-0'
+      }
     >
-      {project && (
+      {project && study && (
+        <CaseStudy study={study} project={project} titleId="project-modal-title" onClose={onClose} />
+      )}
+      {project && !study && (
         <div>
           <div className={`relative overflow-hidden ${project.image ? 'aspect-16/9' : 'aspect-3/1'}`}>
             <ProjectCover project={project} sizes="(min-width: 768px) 48rem, 100vw" />

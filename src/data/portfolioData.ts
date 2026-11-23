@@ -225,7 +225,7 @@ export const portfolioData: PortfolioData = {
     },
     {
       id: 'ies',
-      title: 'Tecnicatura en Diseño Gráfico y Publicitario',
+      title: 'Tec. en Diseño Gráfico',
       organization: 'Colegio Universitario IES',
       period: 'En curso',
       ongoing: true,

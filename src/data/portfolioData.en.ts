@@ -95,7 +95,7 @@ const experience: Record<string, TimelineText> = {
 const education: Record<string, TimelineText> = {
   coderhouse: { title: 'UX/UI Development Program' },
   'argentina-programa': { title: 'Full Stack Web Developer (Jr.)' },
-  ies: { title: 'Associate Degree in Graphic and Advertising Design', period: 'In progress' },
+  ies: { title: 'Graphic Design', period: 'In progress' },
 }
 
 const skillTitles: Record<string, string> = {

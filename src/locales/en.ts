@@ -121,6 +121,25 @@ export const en: Record<MessageKey, string> = {
   'modal.prototype': 'View prototype',
   'modal.caseStudy': 'Full case study',
 
+  // Case study
+  'case.eyebrow': 'Case study',
+  'case.period': 'Timeline',
+  'case.role': 'My role',
+  'case.type': 'Project type',
+  'case.sections': 'Case study sections',
+  'case.jump': 'Jump to a section',
+  'case.index': 'Contents',
+  'case.enlarge': 'Enlarge: {title}',
+  'case.lightbox': 'Image viewer',
+  'case.counter': '{n} of {total}',
+  'case.prev': 'Previous image',
+  'case.next': 'Next image',
+  'case.closeImage': 'Close image',
+  'case.carousel': 'Social media pieces',
+  'case.carouselPrev': 'See previous pieces',
+  'case.carouselNext': 'See next pieces',
+  'case.slot': 'Space for your piece',
+
   // Tools
   'skills.eyebrow': 'Tools',
   'skills.titleA': 'The',

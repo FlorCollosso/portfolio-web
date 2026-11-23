@@ -37,8 +37,8 @@ export function About({ profile, languages, studying }: AboutProps) {
           <Reveal>
             <p className="text-xl text-ink-soft text-pretty">{intro}.</p>
             {quote && (
-              <blockquote className="relative mt-8 border-l-2 border-rose pl-6 font-serif text-3xl leading-[1.15] font-light text-ink text-balance italic sm:text-4xl">
-                <span aria-hidden="true" className="absolute -top-6 -left-1 font-serif text-7xl leading-none text-rose/40 not-italic">
+              <blockquote className="relative mt-12 border-l-2 border-rose pl-6 font-serif text-3xl leading-[1.15] font-light text-ink text-balance italic sm:text-4xl">
+                <span aria-hidden="true" className="absolute -top-10 -left-1 font-serif text-7xl leading-none text-rose/40 not-italic">
                   “
                 </span>
                 {quote}

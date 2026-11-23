@@ -121,6 +121,25 @@ export const es = {
   'modal.prototype': 'Ver prototipo',
   'modal.caseStudy': 'Caso completo',
 
+  // Caso de estudio
+  'case.eyebrow': 'Caso de estudio',
+  'case.period': 'Período',
+  'case.role': 'Mi rol',
+  'case.type': 'Tipo de proyecto',
+  'case.sections': 'Secciones del caso de estudio',
+  'case.jump': 'Ir a una sección',
+  'case.index': 'Índice',
+  'case.enlarge': 'Ampliar: {title}',
+  'case.lightbox': 'Visor de imágenes',
+  'case.counter': '{n} de {total}',
+  'case.prev': 'Imagen anterior',
+  'case.next': 'Imagen siguiente',
+  'case.closeImage': 'Cerrar imagen',
+  'case.carousel': 'Piezas para redes sociales',
+  'case.carouselPrev': 'Ver piezas anteriores',
+  'case.carouselNext': 'Ver piezas siguientes',
+  'case.slot': 'Espacio para tu pieza',
+
   // Herramientas
   'skills.eyebrow': 'Herramientas',
   'skills.titleA': 'La caja de',
